@@ -1,0 +1,2585 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plataforma de Gestão Operacional — Transportadora</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06080f;--sur:#0d1017;--s2:#141824;--s3:#1a2030;
+  --b1:#ffffff0d;--b2:#ffffff18;--b3:#ffffff28;
+  --red:#e8195a;--red2:#ff2d6e;--rbg:#e8195a18;--rglow:#e8195a30;
+  --grn:#00d68f;--gbg:#00d68f15;--gglow:#00d68f25;
+  --yel:#f5a623;--ybg:#f5a62315;
+  --blu:#4d9fff;--bbg:#4d9fff15;
+  --t1:#f0f2ff;--t2:#9ba3c0;--t3:#4a5270;
+  --r:10px;--rs:7px;
+}
+body{background:var(--bg);color:var(--t1);font-family:Inter,sans-serif;min-height:100vh;font-size:14px}
+#root{min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#fff3;border-radius:4px}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--sur);border-bottom:1px solid var(--b2);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--red);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0;box-shadow:0 0 16px var(--rglow)}
+.logo-text{font-size:15px;font-weight:700}
+.logo-sub{font-size:10px;color:var(--t3);margin-top:1px}
+.nav{background:var(--sur);border-bottom:1px solid var(--b1);display:flex;overflow-x:auto;padding:0 20px}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:14px 15px;font-size:11px;font-weight:600;color:var(--t3);background:transparent;border:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;letter-spacing:.5px;font-family:Inter,sans-serif}
+.nav-btn:hover{color:var(--t2)}
+.nav-btn.on{color:var(--red);border-bottom-color:var(--red)}
+.main{padding:24px;max-width:1400px;margin:0 auto;width:100%}
+/* INPUTS BRANCOS */
+input,select,textarea{
+  background:#ffffff !important;color:#111827 !important;
+  color-scheme:light !important;border:1.5px solid #d1d5db !important;
+  border-radius:var(--rs) !important;padding:8px 11px !important;
+  font-size:13px !important;font-family:Inter,sans-serif !important;
+  width:100%;transition:border-color .18s;
+}
+input:focus,select:focus,textarea:focus{outline:none !important;border-color:var(--red) !important;box-shadow:0 0 0 3px var(--rbg) !important}
+input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;filter:none;opacity:.7}
+select option{background:#fff;color:#111827}
+textarea{resize:vertical;min-height:70px;line-height:1.5}
+.lbl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t2);margin-bottom:5px}
+.fg{margin-bottom:13px}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rs);font-size:12px;font-weight:700;letter-spacing:.3px;cursor:pointer;border:none;transition:all .18s;text-transform:uppercase;font-family:Inter,sans-serif;white-space:nowrap}
+.btn-r{background:var(--red);color:#fff;box-shadow:0 4px 14px var(--rglow)}
+.btn-r:hover{background:var(--red2);transform:translateY(-1px)}
+.btn-o{background:transparent;border:1.5px solid var(--b2) !important;color:var(--t2);width:auto !important}
+.btn-o:hover{border-color:var(--b3) !important;color:var(--t1)}
+.btn-g{background:var(--gbg);border:1px solid var(--gglow) !important;color:var(--grn);width:auto !important}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-xs{padding:4px 9px;font-size:10px}
+.kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:11px;margin-bottom:20px}
+.kc{background:var(--sur);border:1px solid var(--b2);border-radius:var(--r);padding:15px;position:relative;overflow:hidden}
+.kc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kc.r::after{background:var(--red)}.kc.g::after{background:var(--grn)}.kc.b::after{background:var(--blu)}.kc.y::after{background:var(--yel)}
+.kl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:7px}
+.kv{font-size:25px;font-weight:800;letter-spacing:-1px;line-height:1;font-family:"JetBrains Mono",monospace}
+.kc.r .kv{color:var(--red)}.kc.g .kv{color:var(--grn)}.kc.b .kv{color:var(--blu)}.kc.y .kv{color:var(--yel)}
+.ks{font-size:10px;color:var(--t3);margin-top:5px}
+.card{background:var(--sur);border:1px solid var(--b2);border-radius:var(--r);overflow:hidden}
+.ch{padding:13px 17px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t2)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{border-bottom:1px solid var(--b2)}
+th{padding:9px 11px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--b1);transition:background .12s}
+tbody tr:hover{background:var(--s2)}
+td{padding:9px 11px;color:var(--t2);white-space:nowrap}
+td.b{color:var(--t1);font-weight:600}
+td.m{font-family:"JetBrains Mono",monospace;font-size:11px}
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;white-space:nowrap}
+.bg{background:var(--gbg);color:var(--grn);border:1px solid var(--gglow)}
+.br{background:var(--rbg);color:var(--red);border:1px solid var(--rglow)}
+.by{background:var(--ybg);color:var(--yel);border:1px solid #f5a62325}
+.bb{background:var(--bbg);color:var(--blu);border:1px solid #4d9fff25}
+.bk{background:var(--s3);color:var(--t3);border:1px solid var(--b2)}
+.sh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.st{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.st span{color:var(--red)}
+.ss{font-size:11px;color:var(--t3);margin-top:3px}
+.fb{background:var(--sur);border:1px solid var(--b2);border-radius:var(--r);padding:12px 15px;margin-bottom:17px;display:flex;gap:13px;flex-wrap:wrap;align-items:flex-end}
+.fg2{display:flex;flex-direction:column;gap:4px}
+.fg2 .lbl{margin-bottom:0}
+.fg2 input,.fg2 select{width:auto;min-width:130px}
+.ov{position:fixed;inset:0;background:#000b;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.mod{background:var(--sur);border:1px solid var(--b2);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.mh{padding:17px 21px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--sur);z-index:1}
+.mt{font-size:15px;font-weight:700}
+.mb{padding:20px 21px}
+.mf{padding:13px 21px;border-top:1px solid var(--b1);display:flex;gap:10px;justify-content:flex-end}
+.al{padding:10px 13px;border-radius:var(--rs);display:flex;gap:8px;margin-bottom:10px;font-size:12px;align-items:flex-start}
+.al-r{background:var(--rbg);border:1px solid var(--rglow);color:var(--red)}
+.al-g{background:var(--gbg);border:1px solid var(--gglow);color:var(--grn)}
+.al-b{background:var(--bbg);border:1px solid #4d9fff25;color:var(--blu)}
+.al-y{background:var(--ybg);border:1px solid #f5a62325;color:var(--yel)}
+.dv{height:1px;background:var(--b1);margin:12px 0}
+.emp{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:44px;color:var(--t3);gap:9px}
+.lding{display:flex;align-items:center;justify-content:center;padding:36px;gap:10px;color:var(--t3);font-size:13px}
+.sp{width:18px;height:18px;border:2px solid var(--b2);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:20px;right:20px;z-index:300;background:var(--grn);color:#000;padding:11px 20px;border-radius:var(--rs);font-size:13px;font-weight:700;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.err{background:var(--red);color:#fff}
+.mk{background:var(--s2);border:1px solid var(--b2);border-radius:var(--rs);padding:8px 14px;flex:none}
+.dr{position:absolute;top:calc(100% + 3px);left:0;right:0;z-index:50;background:#fff;border:1.5px solid #d1d5db;border-radius:var(--rs);max-height:200px;overflow-y:auto;box-shadow:0 8px 24px #00000030}
+.di{padding:9px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f2f8;color:#111}
+.di:hover{background:#f5f7ff}
+.di:last-child{border-bottom:none}
+.di-n{font-weight:600}
+.di-s{font-size:10px;color:#667;margin-top:1px}
+@media(max-width:768px){.main{padding:14px}.r2,.r3{grid-template-columns:1fr}.kg{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div id="root"><div class="lding"><div class="sp"></div>Carregando...</div></div>
+<div id="toast" class="toast"></div>
+<script>
+// ══════════════════════════════════════════════
+// API SUPABASE — FETCH DIRETO (sem CDN externo)
+// ══════════════════════════════════════════════
+const SURL = 'https://pneakxdlbyuysjorhjdu.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuZWFreGRsYnl1eXNqb3JoamR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NTMwODIsImV4cCI6MjA5MjEyOTA4Mn0.U43ri8NtZVuxGANrslQ1GQTZ_hnNJ4dtAYCR9xMNTHk';
+const HDR = {'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json'};
+
+const db = {
+  async get(table, filters={}, opts={}) {
+    const url = new URL(`${SURL}/rest/v1/${table}`);
+    url.searchParams.set('select', opts.select || '*');
+    Object.entries(filters).forEach(([k,v]) => {
+      if (typeof v === 'object' && v.op) url.searchParams.set(k, `${v.op}.${v.val}`);
+      else url.searchParams.set(k, `eq.${v}`);
+    });
+    if (opts.order) url.searchParams.set('order', opts.order);
+    if (opts.ilike) Object.entries(opts.ilike).forEach(([k,v]) => url.searchParams.set(k, `ilike.*${v}*`));
+    if (opts.limit) url.searchParams.set('limit', opts.limit);
+    const r = await fetch(url.toString(), {headers: HDR});
+    if (!r.ok) throw new Error(`DB ${r.status}: ${await r.text()}`);
+    return r.json();
+  },
+  async post(table, data) {
+    const r = await fetch(`${SURL}/rest/v1/${table}`, {method:'POST',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify(data)});
+    if (!r.ok) throw new Error(await r.text());
+  },
+  async patch(table, id, data) {
+    const r = await fetch(`${SURL}/rest/v1/${table}?id=eq.${id}`, {method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify(data)});
+    if (!r.ok) throw new Error(await r.text());
+  },
+  async patchWhere(table, col, val, data) {
+    const r = await fetch(`${SURL}/rest/v1/${table}?${col}=eq.${encodeURIComponent(val)}`, {method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify(data)});
+    if (!r.ok) throw new Error(await r.text());
+  }
+};
+
+// ══════════════════════════════════════════════
+// REACT
+// ══════════════════════════════════════════════
+const {createElement:h,useState,useEffect,useMemo} = React;
+const fmt=(n,d=0)=>n!=null?Number(n).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}):'0';
+const R=n=>`R$ ${fmt(n||0,2)}`;
+const iso=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const fd=d=>{if(!d)return'—';const s=d.includes('T')?d.split('T')[0]:d;const[y,m,dd]=s.split('-');return`${dd}/${m}/${y}`};
+const dstr=()=>new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+let _tt;
+function toast(msg,t='ok'){const el=document.getElementById('toast');if(!el)return;el.textContent=(t==='ok'?'✓ ':'✕ ')+msg;el.className='toast show'+(t==='err'?' err':'');clearTimeout(_tt);_tt=setTimeout(()=>el.className='toast',3200)}
+
+const Ldg=()=>h('div',{className:'lding'},h('div',{className:'sp'}),'Carregando...');
+const Emp=({i='📭',t='Sem dados'})=>h('div',{className:'emp'},h('div',{style:{fontSize:36,opacity:.3}},i),h('div',null,t));
+
+const Bs=({s})=>{
+  const M={'ATIVO':['bg','● Ativo'],'MANUTENCAO':['by','🔧 Manut.'],'PE':['bb','📋 PE'],'AGUARDANDO_PECA':['br','⏳ Aguard.'],'LIBERADO':['bb','✓ Lib.'],'DESLIGADO':['bk','✕ Deslig.'],'JUSTA_CAUSA':['br','⚠ J.Causa'],'AFASTADO':['by','~ Afastado'],'1ª Saída':['bg','1ª Saída'],'Recarga':['br','⟳ Recarga'],'MOTORISTA':['bb','Motorista'],'AJUDANTE':['bg','Ajudante'],'COORDENADOR':['br','Coord.'],'ADM':['bk','ADM'],'VAN':['bb','VAN'],'VUC':['bg','VUC']};
+  const[c,l]=M[s]||['bk',s||'—'];return h('span',{className:`badge ${c}`},l)
+};
+const Ob=({o})=>{if(!o)return h('span',{style:{color:'var(--t3)'}},'—');if(o.includes('1ª'))return h('span',{className:'badge bb'},'1ª Onda');if(o.includes('2ª'))return h('span',{className:'badge bg'},'2ª Onda');return h('span',{className:'badge by'},'3ª Onda')};
+
+/* DASHBOARD */
+function Dashboard(){
+  const[d,setD]=useState(null);const[ld,setLd]=useState(true);const[mes,setMes]=useState('2026-04');const[err,setErr]=useState(null);
+  useEffect(()=>{load()},[mes]);
+  async function load(){
+    setLd(true);setErr(null);
+    try{
+      const ini=`${mes}-01`,fim=`${mes}-31`;
+      const[s,rc,fr,eq,vds]=await Promise.all([
+        db.get('entrada_diaria',{data:{op:'gte',val:ini}},{order:'data.asc'}).then(r=>r.filter(x=>x.data<=fim&&x.status_operacional==='1ª Saída')),
+        db.get('entrada_diaria',{data:{op:'gte',val:ini}},{order:'data.asc'}).then(r=>r.filter(x=>x.data<=fim&&x.status_operacional==='Recarga')),
+        db.get('frota',{},{select:'status'}),
+        db.get('equipe',{},{select:'status'}),
+        db.get('vendas_diarias',{},{order:'data.asc'}).then(r=>r.filter(x=>x.data>=ini&&x.data<=fim)),
+      ]);
+      const mm={};
+      s.forEach(x=>{if(!x.motorista_nome)return;if(!mm[x.motorista_nome])mm[x.motorista_nome]={n:0,cx:0,km:0,cl:0};mm[x.motorista_nome].n++;mm[x.motorista_nome].cx+=x.qtd_caixas||0;mm[x.motorista_nome].km+=x.km||0;mm[x.motorista_nome].cl+=x.num_clientes||0});
+      setD({cx:s.reduce((a,r)=>a+(r.qtd_caixas||0),0),cl:s.reduce((a,r)=>a+(r.num_clientes||0),0),km:s.reduce((a,r)=>a+(r.km||0),0),vd:(vds||[]).reduce((a,r)=>a+parseFloat(r.venda_total||0),0),dias:new Set(s.map(r=>r.data)).size,rec:rc.reduce((a,r)=>a+(r.valor_motorista||0)+(r.valor_ajudante1||0)+(r.valor_ajudante2||0),0),fa:fr.filter(f=>f.status==='ATIVO').length,fm:fr.filter(f=>f.status!=='ATIVO').length,et:eq.filter(e=>e.status==='ATIVO').length,mots:Object.entries(mm).sort((a,b)=>b[1].cx-a[1].cx).slice(0,8)});
+    }catch(e){console.error(e);setErr('Erro: '+e.message)}
+    setLd(false);
+  }
+  if(ld)return h(Ldg);
+  return h('div',null,
+    h('div',{className:'sh'},
+      h('div',null,h('h1',{className:'st'},'Dashboard ',h('span',null,'Operacional')),h('div',{className:'ss'},dstr())),
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Mês'),h('select',{value:mes,onChange:e=>setMes(e.target.value),style:{width:150}},h('option',{value:'2026-04'},'Abril 2026'),h('option',{value:'2026-03'},'Março 2026'),h('option',{value:'2026-05'},'Maio 2026')))
+    ),
+    err&&h('div',{className:'al al-r'},'⚠ '+err),
+    d&&h('div',null,
+      h('div',{className:'kg'},
+        h('div',{className:'kc r'},h('div',{className:'kl'},'Total Caixas'),h('div',{className:'kv'},fmt(d.cx)),h('div',{className:'ks'},`${d.dias} dias`)),
+        h('div',{className:'kc g'},h('div',{className:'kl'},'Clientes'),h('div',{className:'kv'},fmt(d.cl))),
+        h('div',{className:'kc b'},h('div',{className:'kl'},'KM Rodados'),h('div',{className:'kv'},fmt(d.km))),
+        h('div',{className:'kc r'},h('div',{className:'kl'},'Total Vendas'),h('div',{className:'kv',style:{fontSize:18}},R(d.vd))),
+        h('div',{className:'kc g'},h('div',{className:'kl'},'Frota Ativa'),h('div',{className:'kv'},d.fa),h('div',{className:'ks'},`${d.fm} manut.`)),
+        h('div',{className:'kc b'},h('div',{className:'kl'},'Equipe Ativa'),h('div',{className:'kv'},d.et)),
+        h('div',{className:'kc y'},h('div',{className:'kl'},'Recargas Mês'),h('div',{className:'kv',style:{fontSize:18}},R(d.rec))),
+      ),
+      d.mots.length>0&&h('div',{className:'card'},
+        h('div',{className:'ch'},h('span',{className:'ct'},'🏆 Produtividade — Motoristas')),
+        h('div',{className:'tw'},h('table',null,
+          h('thead',null,h('tr',null,h('th',null,'Motorista'),h('th',null,'Saídas'),h('th',null,'Caixas'),h('th',null,'Média'),h('th',null,'KM'),h('th',null,'Clientes'))),
+          h('tbody',null,d.mots.map(([n,x],i)=>h('tr',{key:i},h('td',{className:'b'},n),h('td',{className:'m'},x.n),h('td',{className:'m'},fmt(x.cx)),h('td',{className:'m'},fmt(x.cx/Math.max(x.n,1))),h('td',{className:'m'},fmt(x.km)),h('td',{className:'m'},fmt(x.cl)))))
+        ))
+      )
+    )
+  )
+}
+
+/* LIBERAÇÕES */
+function Liberacoes(){
+  const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);const[dt,setDt]=useState(iso());const[onda,setOnda]=useState('');const[mf,setMf]=useState('');const[mots,setMots]=useState([]);const[err,setErr]=useState(null);
+  useEffect(()=>{load()},[dt,onda,mf]);
+
+  function calcTempo(s,c){if(!s||!c)return'—';const[hs,ms]=s.split(':').map(Number);const[hc,mc]=c.split(':').map(Number);const d=(hc*60+mc)-(hs*60+ms);if(d<=0)return'—';return`${Math.floor(d/60)}h${String(d%60).padStart(2,'0')}m`}
+  function fmtT(t){if(!t)return'—';return t.substring(0,5)}
+
+  function expHorariosExcel(){
+    if(!rows.length){toast('Sem dados','err');return}
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.json_to_sheet(rows.map(r=>({
+      'Data':fd(r.data),'Placa':r.placa||'—','Tipo':r.tipo_veiculo||'—','Onda':r.onda||'—',
+      'Motorista':r.motorista_nome||'—','Ajudante 1':r.ajudante1_nome||'—','Ajudante 2':r.ajudante2_nome||'—',
+      'Rota':r.rota||'—','Tipo Saída':r.status_operacional||'—',
+      'Saída':fmtT(r.horario_saida),'Chegada':fmtT(r.horario_chegada),'Tempo na Rua':calcTempo(r.horario_saida,r.horario_chegada),
+      'Caixas':r.qtd_caixas||0,'Clientes':r.num_clientes||0,'KM':r.km||0
+    })));
+    XLSX.utils.book_append_sheet(wb,ws,'Horários');
+    XLSX.writeFile(wb,`Horarios_${dt}.xlsx`);
+    toast('Excel exportado!');
+  }
+
+  function expHorariosPDF(){
+    if(!rows.length){toast('Sem dados','err');return}
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape'});
+    const pW=doc.internal.pageSize.getWidth();
+
+    // CABEÇALHO MURICI
+    doc.setFillColor(232,25,90);doc.rect(0,0,pW,22,'F');
+    doc.setFontSize(16);doc.setFont('helvetica','bold');
+    doc.setTextColor(255,255,255);doc.text('MURICI TRANSPORTES',14,10);
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text('Unidade Central',14,16);
+    doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('Relatório de Controle de Jornada',pW-14,10,{align:'right'});
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(`Data: ${fd(dt)}`,pW-14,16,{align:'right'});
+
+    // LINHA RESUMO
+    doc.setFillColor(255,240,244);doc.rect(0,22,pW,12,'F');
+    doc.setTextColor(100,100,100);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    const totalVeic=rows.length;
+    const totalCx=rows.reduce((a,r)=>a+(r.qtd_caixas||0),0);
+    const comHorario=rows.filter(r=>r.horario_saida&&r.horario_chegada).length;
+    doc.text(`Veículos: ${totalVeic}   |   Caixas: ${totalCx}   |   Registros com horário: ${comHorario}/${totalVeic}   |   Gerado em: ${new Date().toLocaleString('pt-BR')}`,14,30);
+
+    // TABELA PRINCIPAL — focada em controle de ponto/RH
+    const head=[['Colaborador','Função','Placa','Tipo','Onda','Rota','Tipo Saída','Entrada Base','Saída Base','Tempo Jornada','Caixas','KM']];
+    // Expande: uma linha por colaborador (motorista + ajudantes separados)
+    const body=[];
+    rows.forEach(r=>{
+      const mot=(r.motorista_nome||'').toUpperCase();
+      const aj1=(r.ajudante1_nome||'').toUpperCase();
+      const aj2=(r.ajudante2_nome||'').toUpperCase();
+      const linha=(nome,func)=>[
+        nome||'—',func,r.placa||'—',r.tipo_veiculo||'—',r.onda||'—',
+        r.rota||'—',r.status_operacional||'—',
+        fmtT(r.horario_saida),fmtT(r.horario_chegada),
+        calcTempo(r.horario_saida,r.horario_chegada),
+        r.qtd_caixas||0,r.km||0
+      ];
+      if(mot)body.push(linha(mot,'MOTORISTA'));
+      if(aj1)body.push(linha(aj1,'AJUDANTE'));
+      if(aj2)body.push(linha(aj2,'AJUDANTE'));
+    });
+
+    doc.autoTable({
+      head,body,startY:36,
+      styles:{fontSize:7,cellPadding:2},
+      headStyles:{fillColor:[232,25,90],textColor:255,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[255,248,250]},
+      columnStyles:{
+        0:{cellWidth:40},1:{cellWidth:18},2:{cellWidth:14},
+        3:{cellWidth:10},7:{halign:'center'},8:{halign:'center'},9:{halign:'center'}
+      },
+      didDrawPage:(data)=>{
+        const pg=doc.internal.getCurrentPageInfo().pageNumber;
+        const tot=doc.internal.getNumberOfPages();
+        doc.setFontSize(7);doc.setTextColor(170,170,170);
+        doc.text('Plataforma de Gestão Operacional — Transportadora',14,doc.internal.pageSize.getHeight()-5);
+        doc.text(`Página ${pg} de ${tot}`,pW-14,doc.internal.pageSize.getHeight()-5,{align:'right'});
+      }
+    });
+
+    doc.save(`Controle_Jornada_${dt}.pdf`);
+    toast('PDF de Jornada exportado!');
+  }
+
+  async function load(){
+    setLd(true);setErr(null);
+    try{
+      let data=await db.get('entrada_diaria',{data:dt},{order:'onda.asc'});
+      if(onda)data=data.filter(r=>r.onda&&r.onda.includes(onda));
+      if(mf)data=data.filter(r=>r.motorista_nome===mf);
+      setRows(data);
+      const m=await db.get('equipe',{funcao:'MOTORISTA'},{select:'nome',order:'nome.asc'});
+      setMots(m);
+    }catch(e){console.error(e);setErr('Erro: '+e.message)}
+    setLd(false);
+  }
+  const T=useMemo(()=>({v:rows.length,cx:rows.reduce((a,r)=>a+(r.qtd_caixas||0),0),cl:rows.reduce((a,r)=>a+(r.num_clientes||0),0),km:rows.reduce((a,r)=>a+(r.km||0),0),o1:rows.filter(r=>r.onda?.includes('1ª')).length,o2:rows.filter(r=>r.onda?.includes('2ª')).length,o3:rows.filter(r=>r.onda?.includes('3ª')).length,vd:rows.filter(r=>r.status_operacional==='Recarga').reduce((a,r)=>a+parseFloat(r.venda_total_dia||0),0)}),[rows]);
+  return h('div',null,
+    h('div',{className:'sh'},
+      h('div',null,h('h1',{className:'st'},'Liberações ',h('span',null,'Diárias'))),
+      h('div',{style:{display:'flex',gap:8}},
+        h('button',{className:'btn btn-o btn-sm',onClick:expHorariosExcel},'⬇ Excel Horários'),
+        h('button',{className:'btn btn-o btn-sm',style:{borderColor:'#e8195a50',color:'var(--red)'},onClick:expHorariosPDF},'⬇ PDF Horários')
+      )
+    ),
+    h('div',{className:'fb'},
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Data'),h('input',{type:'date',value:dt,onChange:e=>setDt(e.target.value),style:{width:150}})),
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Onda'),h('select',{value:onda,onChange:e=>setOnda(e.target.value),style:{width:140}},h('option',{value:''},'Todas'),h('option',{value:'1ª'},'1ª — VAN'),h('option',{value:'2ª'},'2ª — VUC'),h('option',{value:'3ª'},'3ª Onda'))),
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Motorista'),h('select',{value:mf,onChange:e=>setMf(e.target.value),style:{width:200}},h('option',{value:''},'Todos'),mots.map(m=>h('option',{key:m.nome,value:m.nome},m.nome)))),
+    ),
+    h('div',{className:'kg',style:{marginBottom:16}},
+      h('div',{className:'kc r'},h('div',{className:'kl'},'Veículos'),h('div',{className:'kv'},T.v)),
+      h('div',{className:'kc g'},h('div',{className:'kl'},'Caixas'),h('div',{className:'kv'},fmt(T.cx))),
+      h('div',{className:'kc b'},h('div',{className:'kl'},'Clientes'),h('div',{className:'kv'},fmt(T.cl))),
+      h('div',{className:'kc y'},h('div',{className:'kl'},'KM Total'),h('div',{className:'kv'},fmt(T.km))),
+      h('div',{className:'kc b'},h('div',{className:'kl'},'1ª Onda'),h('div',{className:'kv'},T.o1)),
+      h('div',{className:'kc g'},h('div',{className:'kl'},'2ª Onda'),h('div',{className:'kv'},T.o2)),
+      h('div',{className:'kc y'},h('div',{className:'kl'},'3ª Onda'),h('div',{className:'kv'},T.o3)),
+      T.vd>0&&h('div',{className:'kc g'},h('div',{className:'kl'},'Venda Recargas'),h('div',{className:'kv',style:{fontSize:16}},R(T.vd)),h('div',{className:'ks'},'Soma das recargas do dia')),
+    ),
+    err&&h('div',{className:'al al-r'},'⚠ '+err),
+    ld?h(Ldg):rows.length===0?h(Emp,{i:'🚛',t:`Nenhuma saída em ${fd(dt)}`}):
+    h('div',{className:'card'},h('div',{className:'tw'},h('table',null,
+      h('thead',null,h('tr',null,h('th',null,'Onda'),h('th',null,'Placa'),h('th',null,'Tipo'),h('th',null,'Motorista'),h('th',null,'Ajudante 1'),h('th',null,'Ajudante 2'),h('th',null,'Nº Transp'),h('th',null,'Rota'),h('th',null,'Caixas'),h('th',null,'Clientes'),h('th',null,'KM'),h('th',{style:{color:'var(--yel)'}},'Cubagem m³'),h('th',{style:{color:'var(--grn)'}},'Venda R$'))),
+      h('tbody',null,rows.map(s=>h('tr',{key:s.id,style:{position:'relative'}},
+        h('td',null,h(Ob,{o:s.onda})),h('td',{className:'b m'},s.placa||'—'),h('td',null,s.tipo_veiculo?h(Bs,{s:s.tipo_veiculo}):'—'),
+        h('td',{className:'b'},s.motorista_nome||'—'),h('td',null,s.ajudante1_nome||'—'),h('td',null,s.ajudante2_nome||'—'),
+        h('td',{className:'m'},s.num_transporte||'—'),h('td',{className:'m'},s.rota||'—'),
+        h('td',{className:'m'},fmt(s.qtd_caixas)),h('td',{className:'m'},fmt(s.num_clientes)),h('td',{className:'m'},fmt(s.km)),h('td',{className:'m',style:{color:'var(--yel)'}},fmt(s.cubos,2)),h('td',{className:'m',style:{color:'var(--grn)',fontSize:10}},s.status_operacional==='Recarga'?h('span',{className:'badge br',style:{fontSize:9,padding:'1px 6px'}},'⟳ REC'):s.venda_total_dia?R(s.venda_total_dia):'—'),
+      )))
+    )))
+  )
+}
+
+/* ENTRADA DO DIA */
+function EntradaDia(){
+  const[rows,setRows]=useState([]);
+  const[ld,setLd]=useState(true);
+  const[dt,setDt]=useState(iso());
+  const[modal,setModal]=useState(false);
+  const[editId,setEditId]=useState(null);
+  const[delConfirm,setDelConfirm]=useState(null);
+  const[saving,setSaving]=useState(false);
+  const[importing,setImporting]=useState(false);
+  const[importResult,setImportResult]=useState(null);
+  const[eq,setEq]=useState([]);
+  const[fr,setFr]=useState([]);
+  const[vendaDia,setVendaDia]=useState(null);
+  const[vendaInput,setVendaInput]=useState('');
+  const[savingVenda,setSavingVenda]=useState(false);
+  const fileRef=React.useRef(null);
+  const emptyF={data:iso(),onda:'1ª ONDA 06:00 às 06:30',placa:'',num_transporte:'',rota:'',
+    motorista_nome:'',ajudante1_nome:'',ajudante2_nome:'',
+    qtd_caixas:'',num_clientes:'',cubos:'',km:'',total_venda:'',cte:'',
+    horario_saida:'',horario_chegada:'',
+    venda_total_dia:'',
+    status_operacional:'1ª Saída'};
+  const[F,setF]=useState(emptyF);
+
+  useEffect(()=>{loadR();loadVendaDia()},[dt]);
+  useEffect(()=>{loadRefs()},[]);
+
+  async function loadR(){
+    setLd(true);
+    try{const d=await db.get('entrada_diaria',{data:dt},{order:'onda.asc'});setRows(d)}
+    catch(e){}
+    setLd(false);
+  }
+  async function loadRefs(){
+    try{
+      const[e,f]=await Promise.all([
+        db.get('equipe',{status:'ATIVO'},{select:'nome,funcao',order:'nome.asc'}),
+        db.get('frota',{},{select:'placa,tipo,status',order:'placa.asc'})
+      ]);
+      setEq(e);setFr(f);
+    }catch(e){}
+  }
+
+  async function loadVendaDia(){
+    try{
+      const d=await db.get('vendas_diarias',{data:dt},{select:'id,data,venda_total,obs'});
+      if(d&&d.length>0){
+        setVendaDia(d[0]);
+        setVendaInput(String(d[0].venda_total||''));
+      }else{
+        setVendaDia(null);
+        setVendaInput('');
+      }
+    }catch(e){}
+  }
+
+  function expExcelEntrada(){
+    if(!rows.length){toast('Sem dados','err');return}
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.json_to_sheet(rows.map(r=>({
+      'Data':fd(r.data),'Onda':r.onda||'—','Placa':r.placa||'—','Tipo':r.tipo_veiculo||'—',
+      'Motorista':r.motorista_nome||'—','Ajudante 1':r.ajudante1_nome||'—','Ajudante 2':r.ajudante2_nome||'—',
+      'Nº Transporte':r.num_transporte||'—','Rota':r.rota||'—','Status':r.status_operacional||'—',
+      'Caixas':r.qtd_caixas||0,'Clientes':r.num_clientes||0,'KM':r.km||0,'Cubagem m³':r.cubos||0,
+      'Venda R$':r.status_operacional==='1ª Saída'?(r.venda_total_dia||0):0,
+      'CTE':r.cte||'—','Horário Saída':r.horario_saida||'—','Horário Chegada':r.horario_chegada||'—',
+      'Observações':r.observacoes||'—','Nº PE':r.num_pe||'—','Motivo PE':r.motivo_pe||'—'
+    })));
+    XLSX.utils.book_append_sheet(wb,ws,'Entrada do Dia');
+    XLSX.writeFile(wb,`Entrada_${dt}.xlsx`);
+  }
+
+  function expPDFEntrada(){
+    if(!rows.length){toast('Sem dados','err');return}
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape'});
+    const pW=doc.internal.pageSize.getWidth();
+
+    // CABEÇALHO MURICI
+    doc.setFillColor(232,25,90);doc.rect(0,0,pW,22,'F');
+    doc.setFontSize(16);doc.setFont('helvetica','bold');
+    doc.setTextColor(255,255,255);doc.text('MURICI TRANSPORTES',14,10);
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text('Unidade Central',14,16);
+    doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('Entrada do Dia',pW-14,10,{align:'right'});
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(`Data: ${fd(dt)}`,pW-14,16,{align:'right'});
+
+    // LINHA RESUMO
+    doc.setFillColor(255,240,244);doc.rect(0,22,pW,12,'F');
+    doc.setTextColor(100,100,100);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    const somRec=rows.filter(r=>r.status_operacional==='Recarga').reduce((a,r)=>a+parseFloat(r.venda_total_dia||0),0);
+    const vendaTotal=(vendaDia?parseFloat(vendaDia.venda_total||0):0)+somRec;
+    const totalCx=rows.reduce((a,r)=>a+(r.qtd_caixas||0),0);
+    const totalCl=rows.reduce((a,r)=>a+(r.num_clientes||0),0);
+    doc.text(`Veículos: ${rows.length}   |   Caixas: ${totalCx}   |   Clientes: ${totalCl}   |   Venda Total: R$ ${vendaTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}   |   Gerado em: ${new Date().toLocaleString('pt-BR')}`,14,30);
+
+    const head=[['Onda','Placa','Tipo','Motorista','Ajudante 1','Rota','Status','Caixas','KM','Saída','Chegada','Tempo','Obs']];
+    const body=rows.map(r=>[
+      r.onda||'—',r.placa||'—',r.tipo_veiculo||'—',
+      (r.motorista_nome||'—').split(' ').slice(0,2).join(' '),
+      (r.ajudante1_nome||'—').split(' ').slice(0,2).join(' '),
+      r.rota||'—',r.status_operacional||'—',
+      r.qtd_caixas||0,r.km||0,
+      r.horario_saida?r.horario_saida.substring(0,5):'—',
+      r.horario_chegada?r.horario_chegada.substring(0,5):'—',
+      calcTempo(r.horario_saida,r.horario_chegada),
+      r.observacoes||'—'
+    ]);
+
+    doc.autoTable({
+      head,body,startY:36,
+      styles:{fontSize:7,cellPadding:2},
+      headStyles:{fillColor:[232,25,90],textColor:255,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[255,248,250]},
+      columnStyles:{9:{halign:'center'},10:{halign:'center'},11:{halign:'center'}},
+      didDrawPage:(data)=>{
+        const pg=doc.internal.getCurrentPageInfo().pageNumber;
+        const tot=doc.internal.getNumberOfPages();
+        doc.setFontSize(7);doc.setTextColor(170,170,170);
+        doc.text('Plataforma de Gestão Operacional — Transportadora',14,doc.internal.pageSize.getHeight()-5);
+        doc.text(`Página ${pg} de ${tot}`,pW-14,doc.internal.pageSize.getHeight()-5,{align:'right'});
+      }
+    });
+
+    doc.save(`Entrada_${dt}.pdf`);
+    toast('PDF exportado!');
+  }
+
+  async function salvarVenda(){
+    if(!vendaInput||parseFloat(vendaInput)<=0){toast('Digite o valor da venda','err');return}
+    setSavingVenda(true);
+    try{
+      const val=parseFloat(vendaInput);
+      if(vendaDia&&vendaDia.id){
+        // UPDATE - usa fetch direto pois db.patch usa id
+        const r=await fetch(`${SURL}/rest/v1/vendas_diarias?data=eq.${dt}`,
+          {method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},
+           body:JSON.stringify({venda_total:val,updated_at:new Date().toISOString()})});
+        if(!r.ok)throw new Error(await r.text());
+      }else{
+        // INSERT
+        await db.post('vendas_diarias',{data:dt,venda_total:val});
+      }
+      toast(`Venda do dia salva: R$ ${val.toLocaleString('pt-BR',{minimumFractionDigits:2})}`);
+      loadVendaDia();
+    }catch(e){toast('Erro: '+e.message,'err')}
+    setSavingVenda(false);
+  }
+
+  // ─── ABRIR MODAL NOVO ────────────────────────────────────
+  function abrirNovo(){
+    setEditId(null);
+    setF({...emptyF,data:dt});
+    setModal(true);
+  }
+
+  // ─── ABRIR MODAL EDITAR ──────────────────────────────────
+  function abrirEditar(row){
+    setEditId(row.id);
+    setF({
+      data:row.data||dt,
+      onda:row.onda||'1ª ONDA 06:00 às 06:30',
+      placa:row.placa||'',
+      num_transporte:row.num_transporte||'',
+      rota:row.rota||'',
+      motorista_nome:row.motorista_nome||'',
+      ajudante1_nome:row.ajudante1_nome||'',
+      ajudante2_nome:row.ajudante2_nome||'',
+      qtd_caixas:row.qtd_caixas||'',
+      num_clientes:row.num_clientes||'',
+      cubos:row.cubos||'',
+      km:row.km||'',
+      total_venda:'',
+      venda_total_dia:row.venda_total_dia||'',
+      cte:row.cte||'',
+      horario_saida:row.horario_saida||'',
+      horario_chegada:row.horario_chegada||'',
+      status_operacional:row.status_operacional||'1ª Saída',
+    });
+    setModal(true);
+  }
+
+  // ─── EXCLUIR ─────────────────────────────────────────────
+  async function excluir(id){
+    try{
+      const r=await fetch(`${SURL}/rest/v1/entrada_diaria?id=eq.${id}`,
+        {method:'DELETE',headers:HDR});
+      if(!r.ok)throw new Error(await r.text());
+      toast('Registro excluído!');
+      setDelConfirm(null);
+      loadR();
+    }catch(e){toast('Erro ao excluir: '+e.message,'err')}
+  }
+
+  // ─── IMPORTAR PLANILHA ───────────────────────────────────
+  async function onFileChange(e){
+    const file=e.target.files[0];if(!file)return;e.target.value='';
+    setImporting(true);setImportResult(null);
+    try{
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      // Auto-detectar linha do cabeçalho (pula linhas de título)
+      let headerIdx=0;
+      for(let i=0;i<Math.min(5,raw.length);i++){
+        const r=raw[i].map(v=>String(v).trim().toUpperCase());
+        if(r.includes('DATA')&&r.includes('MOTORISTA')){headerIdx=i;break;}
+      }
+      const headers=raw[headerIdx].map(h=>String(h).trim().toUpperCase());
+      // Dados: linhas após cabeçalho, ignorar linha TOTAL e linhas vazias
+      const dataRows=raw.slice(headerIdx+1).filter(r=>{
+        const first=String(r[0]||'').trim().toUpperCase();
+        return r.some(c=>c!=='')&&first!=='TOTAL'&&first!=='—'&&first!=='';
+      });
+      const col=(names)=>{for(const n of names){const i=headers.findIndex(h=>h.includes(n));if(i>=0)return i;}return -1;};
+      const iData=col(['DATA']),iOnda=col(['ONDA']),iPlaca=col(['PLACA']),
+        iStatus=col(['STATUS']),iTransp=col(['TRANSP','N TRANSP','Nº']),
+        iRota=col(['ROTA']),iMot=col(['MOTORISTA']),
+        iAj1=col(['AJUDANTE 1','AJUDANTE1','AJUD 1']),
+        iAj2=col(['AJUDANTE 2','AJUDANTE2','AJUD 2']),
+        iCx=col(['CAIXAS','QTD']),iCl=col(['CLIENTE']),
+        iKm=col(['KM']),iCub=col(['CUBAGEM','CUBOS','M3','M³']),
+        iVenda=col(['VENDA','TOTAL VENDA','FATURAMENTO']),
+        iCte=col(['CTE','CT-E']),iTipo=col(['TIPO']);
+      const parseDate=(v)=>{
+        if(!v)return dt;
+        if(v instanceof Date){const d=v;return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+        const s=String(v).trim();
+        if(/\d{2}\/\d{2}\/\d{4}/.test(s)){const[dd,mm,yyyy]=s.split('/');return`${yyyy}-${mm}-${dd}`}
+        if(/\d{4}-\d{2}-\d{2}/.test(s))return s.substring(0,10);
+        return dt;
+      };
+      const tv=fr.reduce((m,f)=>{m[f.placa]=f.tipo;return m},{});
+      let ok=0,erros=[];
+      for(let i=0;i<dataRows.length;i++){
+        const r=dataRows[i];
+        const placa=iPlaca>=0?String(r[iPlaca]||'').trim().toUpperCase():'';
+        const mot=iMot>=0?String(r[iMot]||'').trim().toUpperCase():'';
+        if(!placa&&!mot)continue;
+        try{
+          const statusRaw=iStatus>=0?String(r[iStatus]||'').trim():'1ª Saída';
+          const statusOk=statusRaw.toLowerCase().includes('recarga')?'Recarga':'1ª Saída';
+          const ondaRaw=iOnda>=0?String(r[iOnda]||'').trim():'';
+          const ondaOk=ondaRaw.includes('2')||ondaRaw.includes('VUC')?'2ª ONDA 06:30 às 07:00':ondaRaw.includes('3')?'3ª ONDA 08:00':'1ª ONDA 06:00 às 06:30';
+          const tipoBruto=iTipo>=0?String(r[iTipo]||'').trim().toUpperCase():'';const ondaTipo=String(r[iOnda]||'').toUpperCase();const tipo=tipoBruto||(ondaTipo.includes('VAN')?'VAN':ondaTipo.includes('VUC')?'VUC':tv[placa]||'');
+          const venda=iVenda>=0?parseFloat(String(r[iVenda]||'').replace(/[^\d,.]/g,'').replace(',','.'))||0:0;
+          const ir=statusOk==='Recarga';
+          const aj1=iAj1>=0?String(r[iAj1]||'').trim().toUpperCase():'';
+          const aj2=iAj2>=0?String(r[iAj2]||'').trim().toUpperCase():'';
+          await db.post('entrada_diaria',{
+            data:parseDate(iData>=0?r[iData]:null),
+            onda:ondaOk,placa,tipo_veiculo:tipo,
+            num_transporte:iTransp>=0?parseInt(r[iTransp])||null:null,
+            rota:iRota>=0?String(r[iRota]||'').trim().toUpperCase():'',
+            motorista_nome:mot,ajudante1_nome:aj1,ajudante2_nome:aj2,
+            qtd_caixas:iCx>=0?parseInt(r[iCx])||0:0,
+            num_clientes:iCl>=0?parseInt(r[iCl])||0:0,
+            cubos:iCub>=0?parseFloat(String(r[iCub]||'').replace(',','.'))||0:0,
+            km:iKm>=0?parseFloat(r[iKm])||0:0,
+            total_venda:null,
+            venda_total_dia:venda,
+            cte:iCte>=0?String(r[iCte]||'').trim():'',
+            status_operacional:statusOk,
+            valor_motorista:ir?(tipo==='VAN'||tv[placa]==='VAN'?50:70):0,
+            valor_ajudante1:ir&&aj1?(tipo==='VAN'||tv[placa]==='VAN'?50:60):0,
+            valor_ajudante2:ir&&aj2?(tipo==='VAN'||tv[placa]==='VAN'?50:60):0,
+          });
+          ok++;
+        }catch(err){erros.push(`Linha ${i+2}: ${err.message}`);}
+      }
+      setImportResult({ok,erros,total:dataRows.length});
+      if(ok>0)loadR();
+    }catch(err){setImportResult({ok:0,erros:[err.message],total:0});}
+    setImporting(false);
+  }
+
+  // ─── SALVAR (NOVO OU EDITAR) ─────────────────────────────
+  async function salvar(){
+    if(!F.placa||!F.motorista_nome){toast('Placa e motorista obrigatórios','err');return}
+    if(F.status_operacional==='PE'&&!F.num_pe){toast('Nº da PE é obrigatório','err');return}
+    if(F.status_operacional==='PE'&&!F.motivo_pe){toast('Motivo da PE é obrigatório','err');return}
+    setSaving(true);
+    const tv2=fr.find(f=>f.placa===F.placa)?.tipo||'';
+    const ir=F.status_operacional==='Recarga';
+    const payload={
+      ...F,tipo_veiculo:tv2,
+      qtd_caixas:parseInt(F.qtd_caixas)||0,
+      num_clientes:parseInt(F.num_clientes)||0,
+      cubos:parseFloat(F.cubos)||0,
+      km:parseFloat(F.km)||0,
+      total_venda:null,
+      venda_total_dia:parseFloat(F.venda_total_dia)||null,
+      num_transporte:F.num_transporte?parseInt(F.num_transporte):null,
+      cte:F.cte||null,
+      horario_saida:F.horario_saida||null,
+      horario_chegada:F.horario_chegada||null,
+      tempo_trabalhado_min:(()=>{
+        if(!F.horario_saida||!F.horario_chegada)return null;
+        const[hs,ms]=F.horario_saida.split(':').map(Number);
+        const[hc,mc]=F.horario_chegada.split(':').map(Number);
+        const d=(hc*60+mc)-(hs*60+ms);
+        return d>0?d:null;
+      })(),
+      valor_motorista:ir?(tv2==='VAN'?50:70):0,
+      valor_ajudante1:ir&&F.ajudante1_nome?(tv2==='VAN'?50:60):0,
+      valor_ajudante2:ir&&F.ajudante2_nome?(tv2==='VAN'?50:60):0,
+    };
+    try{
+      if(editId){
+        await db.patch('entrada_diaria',editId,payload);
+        toast('Registro atualizado!');
+      }else{
+        await db.post('entrada_diaria',payload);
+        toast('Saída registrada!');
+      }
+      setModal(false);setEditId(null);loadR();
+    }catch(e){toast('Erro: '+e.message,'err')}
+    setSaving(false);
+  }
+
+  const mots=eq.filter(e=>e.funcao==='MOTORISTA');
+  // Soma das recargas (venda_total_dia preenchido nas recargas individuais)
+  const somRecargas=rows.filter(r=>r.status_operacional==='Recarga').reduce((a,r)=>a+parseFloat(r.venda_total_dia||0),0);
+  const T={
+    cx:rows.reduce((a,r)=>a+(r.qtd_caixas||0),0),
+    cl:rows.reduce((a,r)=>a+(r.num_clientes||0),0),
+    cub:rows.reduce((a,r)=>a+(r.cubos||0),0),
+    vd:somRecargas
+  };
+
+  return h('div',null,
+    h('input',{type:'file',accept:'.xlsx,.xls',ref:fileRef,style:{display:'none'},onChange:onFileChange}),
+
+    // CABEÇALHO
+    h('div',{className:'sh'},
+      h('div',null,
+        h('h1',{className:'st'},'Entrada ',h('span',null,'do Dia')),
+        h('div',{className:'ss'},'Importe a planilha ou registre manualmente')
+      ),
+      h('div',{style:{display:'flex',gap:8,flexWrap:'wrap'}},
+        h('button',{className:'btn btn-o btn-sm',onClick:expExcelEntrada},'⬇ Excel'),
+        h('button',{className:'btn btn-o btn-sm',style:{borderColor:'#e8195a50',color:'var(--red)'},onClick:expPDFEntrada},'⬇ PDF'),
+        h('button',{className:'btn btn-o',onClick:()=>fileRef.current&&fileRef.current.click(),disabled:importing,
+          style:{borderColor:'#00d68f50',color:'var(--grn)'}},
+          importing?'⏳ Importando...':'📥 Importar Planilha de Saída'),
+        h('button',{className:'btn btn-r',onClick:abrirNovo},'+ Recarga / Manual'),
+      )
+    ),
+
+    // RESULTADO IMPORTAÇÃO
+    importResult&&h('div',{className:`al ${importResult.erros.length===0?'al-g':'al-y'}`,style:{marginBottom:12}},
+      h('div',null,
+        h('div',{style:{fontWeight:700,marginBottom:4}},
+          importResult.ok>0?`✅ ${importResult.ok} linha(s) importada(s) com sucesso!`:'⚠ Nenhuma linha importada'),
+        importResult.erros.length>0&&h('div',{style:{fontSize:11,opacity:.8}},
+          `${importResult.erros.length} erro(s): ${importResult.erros.slice(0,3).join(' | ')}${importResult.erros.length>3?'...':''}`)
+      ),
+      h('button',{className:'btn btn-xs btn-o',onClick:()=>setImportResult(null),style:{marginLeft:'auto',alignSelf:'flex-start'}},'✕')
+    ),
+
+    // BARRA FILTRO + CARDS
+    h('div',{className:'fb'},
+      h('div',{className:'fg2'},
+        h('label',{className:'lbl'},'Data'),
+        h('input',{type:'date',value:dt,onChange:e=>setDt(e.target.value),style:{width:150}})
+      ),
+      h('div',{style:{marginLeft:'auto',display:'flex',gap:9,flexWrap:'wrap'}},
+        h('div',{className:'mk'},h('div',{className:'kl'},'Veículos'),  h('div',{className:'kv',style:{color:'var(--red)',fontSize:20}},rows.length)),
+        h('div',{className:'mk'},h('div',{className:'kl'},'Caixas'),    h('div',{className:'kv',style:{color:'var(--grn)',fontSize:20}},fmt(T.cx))),
+        h('div',{className:'mk'},h('div',{className:'kl'},'Clientes'),  h('div',{className:'kv',style:{color:'var(--blu)',fontSize:20}},fmt(T.cl))),
+        h('div',{className:'mk'},h('div',{className:'kl'},'Cubagem m³'),h('div',{className:'kv',style:{color:'var(--yel)',fontSize:18}},fmt(T.cub,2))),
+        T.vd>0&&h('div',{className:'mk'},h('div',{className:'kl'},'Venda Total Dia'),h('div',{className:'kv',style:{color:'var(--grn)',fontSize:14}},R(T.vd))),
+      )
+    ),
+
+    // CARD VENDA TOTAL DO DIA
+    h('div',{style:{
+      background:'linear-gradient(135deg,#0d1a0d,#0a1a0a)',
+      border:'1px solid #00d68f30',
+      borderRadius:'var(--r)',padding:'14px 18px',
+      marginBottom:16,
+      display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'
+    }},
+      h('div',{style:{flex:'0 0 auto'}},
+        h('div',{style:{fontSize:10,fontWeight:700,textTransform:'uppercase',
+          letterSpacing:'.7px',color:'var(--grn)',marginBottom:4}},
+          '💰 Total Vendas do Dia'),
+        h('div',{style:{fontSize:11,color:'var(--t3)'}},
+          vendaDia
+            ?`Última atualização: ${new Date(vendaDia.updated_at||'').toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`
+            :'Não preenchido — consulte o print do dia'
+        )
+      ),
+      h('div',{style:{display:'flex',alignItems:'center',gap:8,flex:1,minWidth:260}},
+        h('span',{style:{color:'var(--t3)',fontSize:12,fontWeight:600,whiteSpace:'nowrap'}},'R$'),
+        h('input',{
+          type:'number',
+          placeholder:'Ex: 93946',
+          value:vendaInput,
+          onChange:e=>setVendaInput(e.target.value),
+          onKeyDown:e=>e.key==='Enter'&&salvarVenda(),
+          style:{
+            flex:1,maxWidth:200,
+            fontFamily:"'JetBrains Mono',monospace",
+            fontSize:18,fontWeight:700,
+            textAlign:'right',
+            borderColor:vendaDia?'#00d68f80':'#d1d5db',
+          }
+        }),
+        h('button',{
+          onClick:salvarVenda,
+          disabled:savingVenda,
+          style:{
+            background:vendaDia?'#00d68f':'#e8195a',
+            color:'#fff',border:'none',borderRadius:6,
+            padding:'8px 16px',cursor:'pointer',
+            fontSize:12,fontWeight:700,fontFamily:'Inter,sans-serif',
+            whiteSpace:'nowrap',flexShrink:0
+          }
+        },savingVenda?'Salvando...':(vendaDia?'✓ Atualizar':'+ Registrar'))
+      ),
+      vendaDia&&h('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3}},
+        h('div',{style:{
+          background:'#00d68f15',border:'1px solid #00d68f30',
+          borderRadius:6,padding:'6px 14px',
+          fontSize:20,fontWeight:900,
+          color:'var(--grn)',fontFamily:"'JetBrains Mono',monospace",
+          whiteSpace:'nowrap'
+        }},`R$ ${(parseFloat(vendaDia.venda_total||0)+somRecargas).toLocaleString('pt-BR',{minimumFractionDigits:2})}`),
+        somRecargas>0&&h('div',{style:{fontSize:10,color:'var(--t3)',textAlign:'right'}},
+          `1ª Saídas: R$ ${parseFloat(vendaDia.venda_total||0).toLocaleString('pt-BR',{minimumFractionDigits:2})} + Recargas: R$ ${somRecargas.toLocaleString('pt-BR',{minimumFractionDigits:2})}`
+        )
+      )
+    ),
+
+    // TABELA COM AÇÕES
+    ld?h(Ldg):rows.length===0?h(Emp,{i:'🚛',t:`Nenhuma saída em ${fd(dt)}`}):
+    h('div',{className:'card'},h('div',{className:'tw'},h('table',null,
+      h('thead',null,h('tr',null,
+        h('th',null,'Onda'),h('th',null,'Placa'),h('th',null,'Motorista'),
+        h('th',null,'Ajudante 1'),h('th',null,'Nº Transp'),h('th',null,'Rota'),
+        h('th',null,'Caixas'),h('th',{style:{color:'var(--yel)'}},'Cubagem'),
+        h('th',{style:{color:'var(--grn)'}},'Venda'),
+        h('th',null,'KM'),h('th',{style:{color:'var(--blu)'}},'Saída'),h('th',{style:{color:'var(--grn)'}},'Chegada'),h('th',null,'Tempo'),h('th',null,'Status'),h('th',null,'Recarga'),
+        h('th',{style:{color:'var(--t3)',textAlign:'center',position:'sticky',right:0,background:'var(--sur)',zIndex:2,borderLeft:'1px solid var(--b2)'}},'Ações')
+      )),
+      h('tbody',null,rows.map(s=>h('tr',{key:s.id},
+        // AÇÕES PRIMEIRO — sempre visível
+        h('td',{style:{textAlign:'center',whiteSpace:'nowrap',borderRight:'1px solid var(--b2)'}},
+          h('div',{style:{display:'flex',gap:4,justifyContent:'center'}},
+            h('button',{
+              onClick:()=>abrirEditar(s),
+              title:'Editar este registro',
+              style:{
+                background:'#4d9fff',color:'#fff',border:'none',
+                borderRadius:6,padding:'5px 10px',cursor:'pointer',
+                fontSize:12,fontWeight:700,fontFamily:'Inter,sans-serif',
+                marginRight:4
+              }
+            },'✏ Editar'),
+            h('button',{
+              onClick:()=>setDelConfirm(s),
+              title:'Excluir este registro',
+              style:{
+                background:'#e8195a',color:'#fff',border:'none',
+                borderRadius:6,padding:'5px 10px',cursor:'pointer',
+                fontSize:12,fontWeight:700,fontFamily:'Inter,sans-serif'
+              }
+            },'✕ Del')
+          )
+        ),
+        h('td',null,h(Ob,{o:s.onda})),
+        h('td',{className:'b m'},s.placa),
+        h('td',{className:'b'},s.motorista_nome||'—'),
+        h('td',null,s.ajudante1_nome||'—'),
+        h('td',{className:'m'},s.num_transporte||'—'),
+        h('td',{className:'m'},s.rota||'—'),
+        h('td',{className:'m'},fmt(s.qtd_caixas)),
+        h('td',{className:'m',style:{color:'var(--yel)'}},fmt(s.cubos||0,2)),
+        h('td',{className:'m',style:{color:'var(--grn)',fontSize:10}},s.status_operacional==='Recarga'?h('span',{className:'badge br',style:{fontSize:9,padding:'1px 6px'}},'⟳ REC'):s.venda_total_dia?R(s.venda_total_dia):'—'),
+        h('td',{className:'m'},fmt(s.km)),
+        h('td',{className:'m',style:{color:'var(--blu)',fontFamily:"'JetBrains Mono',monospace"}},s.horario_saida||'—'),
+        h('td',{className:'m',style:{color:s.horario_chegada?'var(--grn)':'var(--yel)',fontFamily:"'JetBrains Mono',monospace"}},
+          s.horario_chegada||h('span',{style:{fontSize:10,color:'var(--yel)'}},s.horario_saida?'⏳ aguard.':'—')
+        ),
+        h('td',{className:'m',style:{color:'var(--t2)'}},
+          s.tempo_trabalhado_min?(()=>{const h2=Math.floor(s.tempo_trabalhado_min/60);const m2=s.tempo_trabalhado_min%60;return `${h2}h${String(m2).padStart(2,'0')}m`})():'—'
+        ),
+        h('td',null,h(Bs,{s:s.status_operacional})),
+        h('td',{className:'m',style:{color:'var(--grn)'}},
+          s.status_operacional==='Recarga'?R((s.valor_motorista||0)+(s.valor_ajudante1||0)+(s.valor_ajudante2||0)):'—'),
+      )))
+    ))),
+
+    // MODAL CONFIRMAÇÃO EXCLUSÃO
+    delConfirm&&h('div',{className:'ov',onClick:e=>e.target.className.includes('ov')&&setDelConfirm(null)},
+      h('div',{className:'mod',style:{maxWidth:420}},
+        h('div',{className:'mh'},h('div',{className:'mt',style:{color:'var(--red)'}},'🗑️ Confirmar Exclusão'),h('button',{className:'btn btn-o btn-xs',onClick:()=>setDelConfirm(null)},'✕')),
+        h('div',{className:'mb'},
+          h('div',{className:'al al-r'},
+            h('div',null,
+              h('div',{style:{fontWeight:700,marginBottom:4}},'Tem certeza que deseja excluir este registro?'),
+              h('div',{style:{fontSize:12}},`${delConfirm.placa} · ${delConfirm.motorista_nome||'—'} · ${fd(delConfirm.data)}`),
+              h('div',{style:{fontSize:11,opacity:.7,marginTop:4}},'Esta ação não pode ser desfeita.')
+            )
+          )
+        ),
+        h('div',{className:'mf'},
+          h('button',{className:'btn btn-o',onClick:()=>setDelConfirm(null)},'Cancelar'),
+          h('button',{className:'btn btn-r',onClick:()=>excluir(delConfirm.id),style:{background:'#c0152a'}},'🗑️ Excluir Permanentemente')
+        )
+      )
+    ),
+
+    // MODAL NOVO / EDITAR
+    modal&&h('div',{className:'ov',onClick:e=>e.target.className.includes('ov')&&setModal(false)},
+      h('div',{className:'mod'},
+        h('div',{className:'mh'},
+          h('div',null,
+            h('div',{className:'mt'},editId?'✏️ Editar Registro':'✏️ Registro Manual / Recarga'),
+            h('div',{style:{fontSize:11,color:'var(--t3)',marginTop:3}},editId?'Corrija os campos e salve':'Use para recargas da tarde ou lançamentos avulsos')
+          ),
+          h('button',{className:'btn btn-o btn-xs',onClick:()=>{setModal(false);setEditId(null);}},'✕')
+        ),
+        h('div',{className:'mb'},
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Data'),h('input',{type:'date',value:F.data,onChange:e=>setF(f=>({...f,data:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Onda'),h('select',{value:F.onda,onChange:e=>setF(f=>({...f,onda:e.target.value}))},
+              h('option',{value:'1ª ONDA 06:00 às 06:30'},'1ª ONDA — VAN'),
+              h('option',{value:'2ª ONDA 06:30 às 07:00'},'2ª ONDA — VUC'),
+              h('option',{value:'3ª ONDA 08:00'},'3ª Onda')
+            ))
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Placa'),h('select',{value:F.placa,onChange:e=>setF(f=>({...f,placa:e.target.value}))},
+              h('option',{value:''},'Selecionar placa...'),
+              fr.filter(f=>f.status==='ATIVO').map(f=>h('option',{key:f.placa,value:f.placa},`${f.placa} — ${f.tipo}`))
+            )),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Status'),h('select',{value:F.status_operacional,onChange:e=>setF(f=>({...f,status_operacional:e.target.value}))},
+              h('option',{value:'1ª Saída'},'1ª Saída'),
+              h('option',{value:'Recarga'},'⟳ Recarga'),
+              h('option',{value:'PE'},'📋 PE — Processo Específico')
+            ))
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Nº Transporte'),h('input',{type:'number',value:F.num_transporte,onChange:e=>setF(f=>({...f,num_transporte:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Rota'),h('input',{type:'text',value:F.rota,onChange:e=>setF(f=>({...f,rota:e.target.value.toUpperCase()}))}))
+          ),
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Motorista'),h('select',{value:F.motorista_nome,onChange:e=>setF(f=>({...f,motorista_nome:e.target.value}))},
+            h('option',{value:''},'Selecionar motorista...'),
+            mots.map(m=>h('option',{key:m.nome,value:m.nome},m.nome))
+          )),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Ajudante 1'),h('select',{value:F.ajudante1_nome,onChange:e=>setF(f=>({...f,ajudante1_nome:e.target.value}))},
+              h('option',{value:''},'—'),eq.map(m=>h('option',{key:m.nome,value:m.nome},m.nome))
+            )),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Ajudante 2'),h('select',{value:F.ajudante2_nome,onChange:e=>setF(f=>({...f,ajudante2_nome:e.target.value}))},
+              h('option',{value:''},'—'),eq.map(m=>h('option',{key:m.nome,value:m.nome},m.nome))
+            ))
+          ),
+          h('div',{className:'r3'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Caixas'),h('input',{type:'number',value:F.qtd_caixas,onChange:e=>setF(f=>({...f,qtd_caixas:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Clientes'),h('input',{type:'number',value:F.num_clientes,onChange:e=>setF(f=>({...f,num_clientes:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'KM'),h('input',{type:'number',value:F.km,onChange:e=>setF(f=>({...f,km:e.target.value}))}))
+          ),
+          h('div',{className:'r3'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Cubagem (m³)'),h('input',{type:'number',step:'0.01',value:F.cubos,onChange:e=>setF(f=>({...f,cubos:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Total Venda do Dia (R$)'),h('input',{type:'number',step:'0.01',value:F.venda_total_dia||'',placeholder:'Total vendas do dia',onChange:e=>setF(f=>({...f,venda_total_dia:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'CTE'),h('input',{type:'text',value:F.cte||'',onChange:e=>setF(f=>({...f,cte:e.target.value}))}))
+          ),
+          h('div',{className:'dv'}),
+          h('div',{className:'al al-b',style:{marginBottom:10}},
+            h('div',null,
+              h('div',{style:{fontWeight:700,marginBottom:2}},'🕐 Horários de Operação'),
+              h('div',{style:{fontSize:11}},'A partir de 21/04/2026 — Preencha a saída pela manhã e a chegada ao retornar.')
+            )
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},
+              h('label',{className:'lbl'},'Horário de Saída da Base',h('span',{style:{color:'var(--red)',marginLeft:4}},'★')),
+              h('input',{type:'time',value:F.horario_saida||'',onChange:e=>setF(f=>({...f,horario_saida:e.target.value})),
+                style:{fontFamily:"'JetBrains Mono',monospace",fontSize:16,textAlign:'center',letterSpacing:2}})
+            ),
+            h('div',{className:'fg'},
+              h('label',{className:'lbl'},'Horário de Chegada na Base',
+                F.horario_saida&&!F.horario_chegada
+                  ?h('span',{style:{color:'var(--yel)',marginLeft:4,fontSize:10}},'⏳ Aguardando retorno')
+                  :F.horario_chegada?h('span',{style:{color:'var(--grn)',marginLeft:4,fontSize:10}},'✓ Baixa dada')
+                  :null
+              ),
+              h('input',{type:'time',value:F.horario_chegada||'',onChange:e=>setF(f=>({...f,horario_chegada:e.target.value})),
+                style:{fontFamily:"'JetBrains Mono',monospace",fontSize:16,textAlign:'center',letterSpacing:2}})
+            )
+          ),
+          F.horario_saida&&F.horario_chegada&&(()=>{
+            const[hs,ms]=F.horario_saida.split(':').map(Number);
+            const[hc,mc]=F.horario_chegada.split(':').map(Number);
+            const d=(hc*60+mc)-(hs*60+ms);
+            if(d<=0)return null;
+            const hrs=Math.floor(d/60),min=d%60;
+            const cxh=F.qtd_caixas?Math.round(parseInt(F.qtd_caixas)/(d/60)):0;
+            return h('div',{className:'al al-g',style:{marginTop:8}},
+              h('span',null,`⏱ Tempo: ${hrs}h${String(min).padStart(2,'0')}m`),
+              cxh>0&&h('span',{style:{marginLeft:12}},`⚡ ${cxh} caixas/hora`)
+            );
+          })(),
+        ),
+          h('div',{className:'dv'}),
+          // PE FIELDS - shown only when PE is selected
+          F.status_operacional==='PE'&&h('div',null,
+            h('div',{className:'al al-r',style:{marginBottom:10}},
+              h('div',null,
+                h('div',{style:{fontWeight:700,marginBottom:2}},'📋 Processo Específico'),
+                h('div',{style:{fontSize:11}},'Preencha os campos abaixo para registrar a PE.')
+              )
+            ),
+            h('div',{className:'r2'},
+              h('div',{className:'fg'},
+                h('label',{className:'lbl'},'Nº da PE ★'),
+                h('input',{type:'text',placeholder:'Ex: PE-2024-001',value:F.num_pe||'',onChange:e=>setF(f=>({...f,num_pe:e.target.value}))})
+              ),
+              h('div',{className:'fg'},
+                h('label',{className:'lbl'},'Motivo ★'),
+                h('select',{value:F.motivo_pe||'',onChange:e=>setF(f=>({...f,motivo_pe:e.target.value}))},
+                  h('option',{value:''},'— Selecionar —'),
+                  h('option',{value:'Assinatura Pendente'},'Assinatura Pendente'),
+                  h('option',{value:'Troca de Produto'},'Troca de Produto'),
+                  h('option',{value:'Avaria / Reentrega'},'Avaria / Reentrega')
+                )
+              )
+            )
+          ),
+          // Observações field
+          h('div',{className:'fg'},
+            h('label',{className:'lbl'},'Observações da Saída'),
+            h('textarea',{
+              value:F.observacoes||'',
+              onChange:e=>setF(f=>({...f,observacoes:e.target.value})),
+              placeholder:'Ex: Devolução NF 12345, avaria, cliente fechado, PE concluída...',
+              style:{minHeight:60}
+            })
+          ),
+        h('div',{className:'mf'},
+          h('button',{className:'btn btn-o',onClick:()=>{setModal(false);setEditId(null);}},'Cancelar'),
+          h('button',{className:'btn btn-r',onClick:salvar,disabled:saving},
+            saving?'Salvando...':editId?'✓ Salvar Alterações':'✓ Registrar')
+        )
+      )
+    )
+  )
+}
+
+
+/* FROTA */
+function Frota(){
+  const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);const[modal,setModal]=useState(false);const[mM,setMM]=useState(null);const[saving,setSaving]=useState(false);
+  const[F,setF]=useState({placa:'',modelo:'',tipo:'VAN',status:'ATIVO',obs:''});
+  const[FM,setFM]=useState({data_entrada:iso(),previsao_retorno:'',km_entrada:'',oficina:'Oficina Central',problema:'',servicos_realizados:'',pendencias:''});
+  useEffect(()=>{load()},[]);
+  async function load(){setLd(true);try{const d=await db.get('frota',{},{order:'tipo.asc,placa.asc'});setRows(d)}catch(e){}setLd(false)}
+  async function salvarV(){if(!F.placa){toast('Placa obrigatória','err');return}setSaving(true);try{if(F.id)await db.patch('frota',F.id,F);else await db.post('frota',F);toast('Salvo!');setModal(false);load()}catch(e){toast('Erro: '+e.message,'err')}setSaving(false)}
+  async function regM(){if(!FM.problema){toast('Descreva o problema','err');return}if(!FM.km_entrada){toast('KM de entrada é obrigatório','err');return}setSaving(true);try{const payload={frota_id:mM.id,placa:mM.placa,status:'MANUTENCAO',...FM,km_entrada:parseInt(FM.km_entrada)||null,previsao_retorno:FM.previsao_retorno||null};await db.patch('frota',mM.id,{status:'MANUTENCAO',obs:FM.problema});await db.post('manutencao',payload);toast('Manutenção registrada!');setMM(null);load()}catch(e){toast('Erro: '+e.message,'err')}setSaving(false)}
+  async function lib(v){try{await db.patch('frota',v.id,{status:'ATIVO'});toast(`${v.placa} liberado!`);load()}catch(e){toast('Erro','err')}}
+  const at=rows.filter(f=>f.status==='ATIVO'),mn=rows.filter(f=>f.status!=='ATIVO');
+  return h('div',null,
+    h('div',{className:'sh'},h('div',null,h('h1',{className:'st'},'Gestão de ',h('span',null,'Frota')),h('div',{className:'ss'},`${rows.length} veículos · ${at.length} ativos`)),h('button',{className:'btn btn-r',onClick:()=>{setF({placa:'',modelo:'',tipo:'VAN',status:'ATIVO',obs:''});setModal(true)}},'+ Cadastrar')),
+    h('div',{className:'kg'},h('div',{className:'kc g'},h('div',{className:'kl'},'Ativos'),h('div',{className:'kv'},at.length)),h('div',{className:'kc y'},h('div',{className:'kl'},'Manutenção'),h('div',{className:'kv'},mn.length)),h('div',{className:'kc b'},h('div',{className:'kl'},'VAN'),h('div',{className:'kv'},rows.filter(f=>f.tipo==='VAN').length)),h('div',{className:'kc r'},h('div',{className:'kl'},'VUC'),h('div',{className:'kv'},rows.filter(f=>f.tipo==='VUC').length))),
+    ld?h(Ldg):h('div',{className:'card'},h('div',{className:'tw'},h('table',null,
+      h('thead',null,h('tr',null,h('th',null,'Placa'),h('th',null,'Modelo'),h('th',null,'Tipo'),h('th',null,'Status'),h('th',null,'Observações'),h('th',null,'Ações'))),
+      h('tbody',null,rows.map(v=>h('tr',{key:v.id},
+        h('td',{className:'b m'},v.placa),h('td',null,v.modelo||'—'),h('td',null,h(Bs,{s:v.tipo})),h('td',null,h(Bs,{s:v.status})),
+        h('td',{style:{maxWidth:260,whiteSpace:'normal',fontSize:11,color:'var(--t3)'}},v.obs||'—'),
+        h('td',null,h('div',{style:{display:'flex',gap:5}},
+          v.status==='ATIVO'?h('button',{className:'btn btn-o btn-xs',onClick:()=>{setMM(v);setFM({data_entrada:iso(),previsao_retorno:'',km_entrada:'',oficina:'Oficina Central',problema:'',servicos_realizados:'',pendencias:''})}},'🔧 Manut.'):h('button',{className:'btn btn-g btn-xs',onClick:()=>lib(v)},'✓ Liberar'),
+          h('button',{className:'btn btn-o btn-xs',onClick:()=>{setF({...v});setModal(true)}},'✏️')
+        ))
+      )))
+    ))),
+    modal&&h('div',{className:'ov'},h('div',{className:'mod'},h('div',{className:'mh'},h('div',{className:'mt'},F.id?'Editar':'Novo Veículo'),h('button',{className:'btn btn-o btn-xs',onClick:()=>setModal(false)},'✕')),h('div',{className:'mb'},h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Placa'),h('input',{type:'text',value:F.placa,onChange:e=>setF(f=>({...f,placa:e.target.value.toUpperCase()}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Modelo'),h('input',{type:'text',value:F.modelo||'',onChange:e=>setF(f=>({...f,modelo:e.target.value}))}))),h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Tipo'),h('select',{value:F.tipo,onChange:e=>setF(f=>({...f,tipo:e.target.value}))},h('option',{value:'VAN'},'VAN'),h('option',{value:'VUC'},'VUC'))),h('div',{className:'fg'},h('label',{className:'lbl'},'Status'),h('select',{value:F.status,onChange:e=>setF(f=>({...f,status:e.target.value}))},h('option',{value:'ATIVO'},'Ativo'),h('option',{value:'MANUTENCAO'},'Manutenção')))),h('div',{className:'fg'},h('label',{className:'lbl'},'Observações'),h('textarea',{value:F.obs||'',onChange:e=>setF(f=>({...f,obs:e.target.value}))}))),h('div',{className:'mf'},h('button',{className:'btn btn-o',onClick:()=>setModal(false)},'Cancelar'),h('button',{className:'btn btn-r',onClick:salvarV,disabled:saving},saving?'Salvando...':'✓ Salvar')))),
+    mM&&h('div',{className:'ov'},h('div',{className:'mod'},h('div',{className:'mh'},h('div',{className:'mt'},`🔧 ${mM.placa}`),h('button',{className:'btn btn-o btn-xs',onClick:()=>setMM(null)},'✕')),h('div',{className:'mb'},h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Entrada'),h('input',{type:'date',value:FM.data_entrada,onChange:e=>setFM(f=>({...f,data_entrada:e.target.value}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Previsão Retorno'),h('input',{type:'date',value:FM.previsao_retorno,onChange:e=>setFM(f=>({...f,previsao_retorno:e.target.value})),placeholder:'Deixe vazio se não souber'}))),h('div',{className:'fg'},h('label',{className:'lbl'},'KM de Entrada ★ Obrigatório'),h('input',{type:'number',placeholder:'Ex: 45000',value:FM.km_entrada,onChange:e=>setFM(f=>({...f,km_entrada:e.target.value})),style:{borderColor:!FM.km_entrada?'#e8195a':undefined}})),h('div',{className:'fg'},h('label',{className:'lbl'},'Problema ⚠'),h('textarea',{placeholder:'Descreva...',value:FM.problema,onChange:e=>setFM(f=>({...f,problema:e.target.value}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Serviços'),h('textarea',{value:FM.servicos_realizados,onChange:e=>setFM(f=>({...f,servicos_realizados:e.target.value}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Pendências'),h('textarea',{value:FM.pendencias,onChange:e=>setFM(f=>({...f,pendencias:e.target.value}))}))),h('div',{className:'mf'},h('button',{className:'btn btn-o',onClick:()=>setMM(null)},'Cancelar'),h('button',{className:'btn btn-r',onClick:regM,disabled:saving},saving?'Salvando...':'✓ Registrar'))))
+  )
+}
+
+/* EQUIPE */
+function Equipe(){
+  const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);const[modal,setModal]=useState(false);const[saving,setSaving]=useState(false);const[busca,setBusca]=useState('');const[ff,setFf]=useState('');
+  const[F,setF]=useState({nome:'',funcao:'MOTORISTA',matricula:'',data_admissao:'',status:'ATIVO',venc_exame_periodico:'',venc_exame_toxicologico:'',obs:''});
+  useEffect(()=>{load()},[]);
+  async function load(){setLd(true);try{const d=await db.get('equipe',{},{order:'funcao.asc,nome.asc'});setRows(d)}catch(e){}setLd(false)}
+  async function salvar(){
+    if(!F.nome){toast('Nome obrigatório','err');return}
+    setSaving(true);
+    // Limpar datas vazias para null (evita erro SQL "invalid input syntax for type date")
+    const payload={...F};
+    ['data_admissao','venc_exame_periodico','venc_exame_toxicologico'].forEach(k=>{
+      if(!payload[k]||payload[k]==='')payload[k]=null;
+    });
+    try{
+      if(F.id)await db.patch('equipe',F.id,payload);
+      else await db.post('equipe',payload);
+      toast('Salvo!');setModal(false);load();
+    }catch(e){toast('Erro: '+e.message,'err')}
+    setSaving(false);
+  }
+  const lista=rows.filter(e=>(!busca||e.nome.toLowerCase().includes(busca.toLowerCase()))&&(!ff||e.funcao===ff));
+  return h('div',null,
+    h('div',{className:'sh'},h('div',null,h('h1',{className:'st'},'Gestão de ',h('span',null,'Equipe')),h('div',{className:'ss'},`${rows.length} colaboradores`)),h('button',{className:'btn btn-r',onClick:()=>{setF({nome:'',funcao:'MOTORISTA',matricula:'',data_admissao:'',status:'ATIVO',venc_exame_periodico:'',venc_exame_toxicologico:'',obs:''});setModal(true)}},'+ Colaborador')),
+    h('div',{className:'kg'},
+      h('div',{className:'kc g'},
+        h('div',{className:'kl'},'🚛 Motoristas Ativos'),
+        h('div',{className:'kv'},rows.filter(e=>e.funcao==='MOTORISTA'&&e.status==='ATIVO').length),
+        h('div',{className:'ks'},'de '+rows.filter(e=>e.funcao==='MOTORISTA').length+' cadastrados')
+      ),
+      h('div',{className:'kc b'},
+        h('div',{className:'kl'},'👷 Ajudantes Ativos'),
+        h('div',{className:'kv'},rows.filter(e=>e.funcao==='AJUDANTE'&&e.status==='ATIVO').length),
+        h('div',{className:'ks'},'de '+rows.filter(e=>e.funcao==='AJUDANTE').length+' cadastrados')
+      ),
+      h('div',{className:'kc y'},
+        h('div',{className:'kl'},'⚠ Irregulares'),
+        h('div',{className:'kv'},rows.filter(e=>e.status!=='ATIVO').length),
+        h('div',{className:'ks'},'desligados / afastados')
+      ),
+      h('div',{className:'kc r'},
+        h('div',{className:'kl'},'👥 Total Equipe'),
+        h('div',{className:'kv'},rows.length),
+        h('div',{className:'ks'},rows.filter(e=>e.status==='ATIVO').length+' ativos no total')
+      ),
+    ),
+    h('div',{className:'fb'},h('div',{className:'fg2'},h('label',{className:'lbl'},'Buscar'),h('input',{type:'text',placeholder:'Nome...',value:busca,onChange:e=>setBusca(e.target.value),style:{width:220}})),h('div',{className:'fg2'},h('label',{className:'lbl'},'Função'),h('select',{value:ff,onChange:e=>setFf(e.target.value),style:{width:150}},h('option',{value:''},'Todas'),h('option',{value:'MOTORISTA'},'Motoristas'),h('option',{value:'AJUDANTE'},'Ajudantes')))),
+    ld?h(Ldg):h('div',{className:'card'},h('div',{className:'tw'},h('table',null,
+      h('thead',null,h('tr',null,h('th',null,'Nome'),h('th',null,'Função'),h('th',null,'Matrícula'),h('th',null,'Status'),h('th',null,'Venc. Periódico'),h('th',null,'Venc. Toxicológico'),h('th',null,''))),
+      h('tbody',null,lista.map(e=>h('tr',{key:e.id},
+        h('td',{className:'b'},e.nome),h('td',null,h(Bs,{s:e.funcao})),h('td',{className:'m'},e.matricula||'—'),h('td',null,h(Bs,{s:e.status})),h('td',{className:'m'},fd(e.venc_exame_periodico)),h('td',{className:'m'},fd(e.venc_exame_toxicologico)),
+        h('td',null,h('button',{className:'btn btn-o btn-xs',onClick:()=>{setF({...e,data_admissao:(e.data_admissao||'').split('T')[0],venc_exame_periodico:(e.venc_exame_periodico||'').split('T')[0],venc_exame_toxicologico:(e.venc_exame_toxicologico||'').split('T')[0]});setModal(true)}},'✏️'))
+      )))
+    ))),
+    modal&&h('div',{className:'ov',onClick:e=>e.target.className.includes('ov')&&setModal(false)},
+      h('div',{className:'mod'},h('div',{className:'mh'},h('div',{className:'mt'},F.id?'Editar':'Novo Colaborador'),h('button',{className:'btn btn-o btn-xs',onClick:()=>setModal(false)},'✕')),
+        h('div',{className:'mb'},
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Nome Completo'),h('input',{type:'text',value:F.nome,onChange:e=>setF(f=>({...f,nome:e.target.value.toUpperCase()}))})),
+          h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Função'),h('select',{value:F.funcao,onChange:e=>setF(f=>({...f,funcao:e.target.value}))},h('option',{value:'MOTORISTA'},'Motorista'),h('option',{value:'AJUDANTE'},'Ajudante'),h('option',{value:'COORDENADOR'},'Coordenador'),h('option',{value:'ADM'},'ADM'))),h('div',{className:'fg'},h('label',{className:'lbl'},'Status'),h('select',{value:F.status,onChange:e=>setF(f=>({...f,status:e.target.value}))},h('option',{value:'ATIVO'},'Ativo'),h('option',{value:'DESLIGADO'},'Desligado'),h('option',{value:'JUSTA_CAUSA'},'Justa Causa'),h('option',{value:'AFASTADO'},'Afastado'),h('option',{value:'FERIAS'},'Férias')))),
+          h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Matrícula'),h('input',{type:'text',value:F.matricula||'',onChange:e=>setF(f=>({...f,matricula:e.target.value}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Admissão'),h('input',{type:'date',value:F.data_admissao||'',onChange:e=>setF(f=>({...f,data_admissao:e.target.value}))}))),
+          h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Venc. Periódico'),h('input',{type:'date',value:F.venc_exame_periodico||'',onChange:e=>setF(f=>({...f,venc_exame_periodico:e.target.value}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Venc. Toxicológico'),h('input',{type:'date',value:F.venc_exame_toxicologico||'',onChange:e=>setF(f=>({...f,venc_exame_toxicologico:e.target.value}))}))),
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Observações / Ocorrências'),h('textarea',{value:F.obs||'',onChange:e=>setF(f=>({...f,obs:e.target.value})),placeholder:'Ex: Atestado 3 dias (15/04), advertência verbal, histórico...'})),
+        ),
+        h('div',{className:'mf'},h('button',{className:'btn btn-o',onClick:()=>setModal(false)},'Cancelar'),h('button',{className:'btn btn-r',onClick:salvar,disabled:saving},saving?'Salvando...':'✓ Salvar'))
+      )
+    )
+  )
+}
+
+/* RECARGAS */
+function Recargas(){
+  const[rows,setRows]=useState([]);       // só recargas
+  const[todasSaidas,setTodasSaidas]=useState([]); // 1ªs saídas do período
+  const[ld,setLd]=useState(true);
+  const[ini,setIni]=useState('2026-04-01');
+  const[fim,setFim]=useState('2026-04-30');
+  const[view,setView]=useState('timeline');
+  const[pagamentos,setPagamentosState]=useState({});
+  // Relatório do Dia
+  const[dtDia,setDtDia]=useState(isoToday());
+
+  function setPagamento(nome, pago){
+    setPagamentosState(prev=>({...prev,[nome]:pago}));
+    if(pago) toast('✅ '+nome.split(' ')[0]+' marcado como PAGO!');
+    else toast('↩ '+nome.split(' ')[0]+' revertido para PENDENTE');
+  }
+
+  function isoToday(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+
+  useEffect(()=>{load()},[ini,fim]);
+
+  async function load(){
+    setLd(true);
+    try{
+      const todos=await db.get('entrada_diaria',{},{order:'data.asc,motorista_nome.asc'});
+      const filtrados=todos.filter(r=>r.data>=ini&&r.data<=fim);
+      setRows(filtrados.filter(r=>r.status_operacional==='Recarga'));
+      setTodasSaidas(filtrados.filter(r=>r.status_operacional==='1ª Saída'));
+    }catch(e){}
+    setLd(false);
+  }
+
+  const fmtT=(s)=>{if(!s)return'—';const p=s.split(':');return`${p[0]}:${p[1]}`};
+  const calcTempo=(s,c)=>{
+    if(!s||!c)return'—';
+    const[hs,ms]=s.split(':').map(Number);
+    const[hc,mc]=c.split(':').map(Number);
+    const d=(hc*60+mc)-(hs*60+ms);
+    if(d<=0)return'—';
+    return`${Math.floor(d/60)}h${String(d%60).padStart(2,'0')}m`;
+  };
+
+  // Montar TIMELINE por colaborador: 1ª saída + recargas
+  const timeline=useMemo(()=>{
+    const map={};
+    // Adicionar 1ªs saídas
+    todasSaidas.forEach(r=>{
+      [r.motorista_nome,r.ajudante1_nome,r.ajudante2_nome].filter(Boolean).forEach(nome=>{
+        const k=`${nome}|${r.data}`;
+        if(!map[k])map[k]={nome,data:r.data,funcao:'',saida1:null,recargas:[]};
+        if(nome===r.motorista_nome)map[k].funcao='MOTORISTA';
+        else if(!map[k].funcao)map[k].funcao='AJUDANTE';
+        map[k].saida1=r;
+      });
+    });
+    // Adicionar recargas
+    rows.forEach(r=>{
+      [[r.motorista_nome,r.valor_motorista,'MOTORISTA'],[r.ajudante1_nome,r.valor_ajudante1,'AJUDANTE'],[r.ajudante2_nome,r.valor_ajudante2,'AJUDANTE']]
+      .forEach(([nome,val,func])=>{
+        if(!nome||!val)return;
+        const k=`${nome}|${r.data}`;
+        if(!map[k])map[k]={nome,data:r.data,funcao:func,saida1:null,recargas:[]};
+        map[k].recargas.push({...r,valor:Number(val)||0});
+      });
+    });
+    return Object.values(map).sort((a,b)=>a.data.localeCompare(b.data)||a.nome.localeCompare(b.nome));
+  },[rows,todasSaidas]);
+
+  // Resumo por colaborador (para totais de pagamento)
+  const resumoPag=useMemo(()=>{
+    const m={};
+    rows.forEach(r=>{
+      [[r.motorista_nome,r.valor_motorista],[r.ajudante1_nome,r.valor_ajudante1],[r.ajudante2_nome,r.valor_ajudante2]]
+      .forEach(([n,v])=>{if(!n||!v)return;if(!m[n])m[n]={n,rc:0,t:0};m[n].rc++;m[n].t+=Number(v)||0});
+    });
+    return Object.values(m).sort((a,b)=>b.t-a.t);
+  },[rows]);
+  const tot=resumoPag.reduce((a,r)=>a+r.t,0);
+
+  // ── EXCEL TIMELINE COMPLETO ─────────────────────────────
+  function expExcel(){
+    if(!rows.length){toast('Sem dados','err');return}
+    const wb=XLSX.utils.book_new();
+    const linhas=[];
+
+    // Agrupa APENAS colaboradores com recarga
+    const porColab={};
+    timeline.filter(t=>t.recargas&&t.recargas.length>0).forEach(t=>{
+      if(!porColab[t.nome])porColab[t.nome]={nome:t.nome,funcao:t.funcao,dias:[]};
+      porColab[t.nome].dias.push(t);
+    });
+
+    Object.values(porColab).forEach(colab=>{
+      // Linha do colaborador
+      linhas.push({'':'','Colaborador':colab.nome,'Função':colab.funcao});
+      colab.dias.forEach(dia=>{
+        // 1ª Saída
+        if(dia.saida1){
+          const s=dia.saida1;
+          linhas.push({
+            '':'1ª SAÍDA','Colaborador':'','Função':'',
+            'Data':fd(s.data),'Nº Transp':s.num_transporte||'','Placa':s.placa||'',
+            'Rota':s.rota||'','Caixas':s.qtd_caixas||0,'Clientes':s.num_clientes||0,
+            'Cubagem':parseFloat(s.cubos||0).toFixed(2),'KM':s.km||0,
+            'Hor. Saída':fmtT(s.horario_saida),'Hor. Chegada':fmtT(s.horario_chegada),
+            'Tempo':calcTempo(s.horario_saida,s.horario_chegada),
+            'Valor Recarga':'—',
+          });
+        }
+        // Recargas
+        dia.recargas.forEach(r=>{
+          linhas.push({
+            '':'⟳ RECARGA','Colaborador':'','Função':'',
+            'Data':fd(r.data),'Nº Transp':r.num_transporte||'','Placa':r.placa||'',
+            'Rota':r.rota||'','Caixas':r.qtd_caixas||0,'Clientes':r.num_clientes||0,
+            'Cubagem':parseFloat(r.cubos||0).toFixed(2),'KM':r.km||0,
+            'Hor. Saída':fmtT(r.horario_saida),'Hor. Chegada':fmtT(r.horario_chegada),
+            'Tempo':calcTempo(r.horario_saida,r.horario_chegada),
+            'Valor Recarga':r.valor.toFixed(2),
+          });
+        });
+      });
+      linhas.push({'':'','Colaborador':'','Função':''});
+    });
+
+    const ws=XLSX.utils.json_to_sheet(linhas);
+    ws['!cols']=[{wch:10},{wch:32},{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:8},{wch:8},{wch:10},{wch:6},{wch:10},{wch:12},{wch:10},{wch:14}];
+    XLSX.utils.book_append_sheet(wb,ws,'Timeline Recargas');
+
+    // Aba resumo
+    const wsR=XLSX.utils.json_to_sheet(resumoPag.map(r=>({'Colaborador':r.n,'Recargas':r.rc,'Total R$':r.t.toFixed(2)})));
+    XLSX.utils.book_append_sheet(wb,wsR,'Resumo Pagamento');
+    XLSX.writeFile(wb,`Recargas_Timeline_${ini}_${fim}.xlsx`);
+    toast('Excel com timeline completa gerado!');
+  }
+
+  // ── PDF TIMELINE CORRIGIDO ──────────────────────────────
+  function expPDFRec(){
+    try{
+      const comRec=timeline.filter(t=>t.recargas&&t.recargas.length>0);
+      if(!comRec.length){toast('Nenhuma recarga no período','err');return;}
+      if(!window.jspdf){toast('jsPDF não disponível','err');return;}
+      const{jsPDF}=window.jspdf;
+      const doc=new jsPDF('landscape','mm','a4');
+      const pW=297,pH=210;
+      const s=function(v){return(v===null||v===undefined)?'':String(v);};
+      const corR=[232,25,90],corB=[20,20,40],corG=[0,140,70],corA=[40,80,200];
+
+      // AGRUPAR por colaborador único (não por data) — FIX do bug de duplicação
+      const porColab={};
+      comRec.forEach(function(t){
+        if(!porColab[t.nome]){
+          porColab[t.nome]={nome:t.nome,funcao:t.funcao,saidas:[],recargas:[]};
+        }
+        if(t.saida1)porColab[t.nome].saidas.push(t.saida1);
+        t.recargas.forEach(function(r){porColab[t.nome].recargas.push(r);});
+      });
+      const colaboradores=Object.values(porColab);
+
+      // ── CABEÇALHO ─────────────────────────────────────────
+      doc.setFillColor(...corR);doc.rect(0,0,pW,18,'F');
+      // Logo M (sem emoji)
+      doc.setFillColor(255,255,255);doc.roundedRect(8,3,12,12,2,2,'F');
+      doc.setTextColor(...corR);doc.setFontSize(11);doc.setFont('helvetica','bold');
+      doc.text('M',11.5,12);
+      // Nome empresa
+      doc.setTextColor(255,255,255);doc.setFontSize(13);doc.setFont('helvetica','bold');
+      doc.text('MURICI LOGISTICA',26,10);
+      doc.setFontSize(7);doc.setFont('helvetica','normal');
+      doc.text('Plataforma de Gestão Operacional',26,15);
+      // Título direita
+      doc.setFontSize(11);doc.setFont('helvetica','bold');
+      doc.text('RELATORIO DE RECARGAS',158,10);
+      doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text('Periodo: '+s(fd(ini))+' a '+s(fd(fim))+'   |   Gerado: '+new Date().toLocaleDateString('pt-BR'),158,15);
+
+      let y=24;
+
+      // ── RESUMO ─────────────────────────────────────────────
+      const pagFilt=resumoPag.filter(r=>colaboradores.some(c=>c.nome===r.n));
+      const boxH=7+pagFilt.length*6;
+      doc.setFillColor(245,245,250);doc.rect(8,y-4,pW-16,boxH,'F');
+      doc.setDrawColor(220,220,230);doc.setLineWidth(0.3);doc.rect(8,y-4,pW-16,boxH,'S');
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...corR);
+      doc.text('RESUMO DE PAGAMENTO',12,y);y+=6;
+      doc.setFontSize(7);
+      pagFilt.forEach(function(r,i){
+        if(i%2===0){doc.setFillColor(238,240,255);doc.rect(8,y-3,pW-16,6,'F');}
+        doc.setFont('helvetica','normal');doc.setTextColor(...corB);
+        doc.text(s(r.n).substring(0,50),12,y);
+        doc.text(s(r.funcao),145,y);
+        doc.text(s(r.rc)+' recarga(s)',180,y);
+        doc.setFont('helvetica','bold');doc.setTextColor(...corG);
+        doc.text('R$ '+s(fmt(r.t,2)),240,y);
+        y+=6;
+      });
+      doc.setDrawColor(...corR);doc.setLineWidth(0.4);doc.line(8,y,pW-8,y);y+=5;
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...corR);
+      doc.text('TOTAL GERAL:',190,y);
+      doc.setTextColor(...corG);doc.text('R$ '+s(fmt(tot,2)),240,y);
+      y+=9;
+
+      // ── DETALHAMENTO — 1 BLOCO POR COLABORADOR ─────────────
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...corR);
+      doc.text('DETALHAMENTO POR COLABORADOR',8,y);y+=5;
+
+      const cx=[8,24,40,62,80,95,108,117,128,140,154,170];
+      const cn=['TIPO','DATA','N TRANSP','PLACA','ROTA','CX','KM','SAIDA','CHEGADA','TEMPO','VALOR'];
+
+      colaboradores.forEach(function(c,ti){
+        // Calcular altura necessária
+        const linhas=c.saidas.length+c.recargas.length;
+        const alturaBloco=10+7+linhas*6+4;
+        if(y+alturaBloco>195){doc.addPage();y=15;}
+
+        // Nome colaborador
+        const corFundo=ti%2===0?[235,240,255]:[240,245,235];
+        doc.setFillColor(...corFundo);doc.rect(8,y-3,pW-16,8,'F');
+        doc.setDrawColor(200,210,230);doc.setLineWidth(0.2);doc.rect(8,y-3,pW-16,8,'S');
+        doc.setFont('helvetica','bold');doc.setFontSize(8);
+        // Sem emoji — usa prefixo texto
+        const prefixo=c.funcao==='MOTORISTA'?'[MOT] ':'[AJU] ';
+        doc.setTextColor(...(c.funcao==='MOTORISTA'?corA:corB));
+        doc.text(prefixo+s(c.nome)+' - '+s(c.funcao),10,y+2);
+        var totC=resumoPag.find(function(r){return r.n===c.nome;});
+        doc.setTextColor(...corG);
+        doc.text('Total: R$ '+s(fmt(totC?totC.t:0,2)),248,y+2);
+        y+=10;
+
+        // Header colunas
+        doc.setFillColor(50,55,70);doc.rect(8,y-4,pW-16,7,'F');
+        doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+        cn.forEach(function(col,i){doc.text(col,cx[i],y);});
+        y+=5;
+
+        // Ordenar: 1ªs saídas e recargas por data
+        var allR=[];
+        c.saidas.forEach(function(r){allR.push({tipo:'1a SAIDA',r:r,valor:null,isRec:false});});
+        c.recargas.forEach(function(r){allR.push({tipo:'RECARGA',r:r,valor:r.valor,isRec:true});});
+        allR.sort(function(a,b){return a.r.data.localeCompare(b.r.data)||(!a.isRec?-1:1);});
+
+        allR.forEach(function(item,idx){
+          if(y>193){doc.addPage();y=15;}
+          if(idx%2===0){doc.setFillColor(252,253,255);doc.rect(8,y-3,pW-16,6,'F');}
+          doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+          doc.setTextColor(...(item.isRec?corR:corA));
+          doc.text(item.tipo,cx[0],y);
+          doc.setFont('helvetica','normal');doc.setTextColor(...corB);
+          doc.text(s(fd(item.r.data)),cx[1],y);
+          doc.text(s(item.r.num_transporte),cx[2],y);
+          doc.text(s(item.r.placa),cx[3],y);
+          doc.text(s(item.r.rota),cx[4],y);
+          doc.text(s(item.r.qtd_caixas),cx[5],y);
+          doc.text(s(item.r.km),cx[6],y);
+          doc.text(s(fmtT(item.r.horario_saida)),cx[7],y);
+          doc.text(s(fmtT(item.r.horario_chegada)),cx[8],y);
+          doc.text(s(calcTempo(item.r.horario_saida,item.r.horario_chegada)),cx[9],y);
+          if(item.valor!=null){
+            doc.setFont('helvetica','bold');doc.setTextColor(...corG);
+            doc.text('R$'+s(fmt(item.valor,0)),cx[10],y);
+          }
+          y+=6;
+        });
+        y+=4;
+      });
+
+      // ── RODAPÉ ────────────────────────────────────────────
+      var totalPags=doc.internal.getNumberOfPages();
+      for(var p=1;p<=totalPags;p++){
+        doc.setPage(p);
+        doc.setFillColor(245,245,248);doc.rect(0,pH-7,pW,7,'F');
+        doc.setFontSize(6);doc.setFont('helvetica','normal');doc.setTextColor(150,150,160);
+        doc.text('MURICI LOGÍSTICA - Plataforma de Gestão',8,pH-2);
+        doc.text('Gerado: '+new Date().toLocaleString('pt-BR'),pW/2-20,pH-2);
+        doc.text('Pag '+p+' / '+totalPags,pW-18,pH-2);
+      }
+
+      doc.save('Recargas_'+s(ini)+'_'+s(fim)+'.pdf');
+      toast('PDF gerado - '+colaboradores.length+' colab., '+totalPags+' pag.!');
+    }catch(err){
+      console.error('PDF ERRO:',err);
+      toast('Erro: '+err.message,'err');
+    }
+  }
+
+    // ── EXCEL RELATÓRIO DO DIA ──────────────────────────────
+  async function expDia(){
+    const todos=await db.get('entrada_diaria',{data:dtDia},{order:'onda.asc'});
+    if(!todos.length){toast(`Sem dados em ${fd(dtDia)}`,'err');return}
+
+    // Buscar venda total do dia
+    let vendaTot=0;
+    try{const vd=await db.get('vendas_diarias',{data:dtDia},{});if(vd.length)vendaTot=vd[0].venda_total;}catch(e){}
+
+    const wb=XLSX.utils.book_new();
+    const linhas=todos.map(r=>({
+      'Onda':r.onda||'','Placa':r.placa||'','Tipo':r.tipo_veiculo||'',
+      'Nº Transporte':r.num_transporte||'','Rota':r.rota||'',
+      'Motorista':r.motorista_nome||'',
+      'Ajudante 1':r.ajudante1_nome||'','Ajudante 2':r.ajudante2_nome||'',
+      'Caixas':r.qtd_caixas||0,'Clientes':r.num_clientes||0,
+      'Cubagem m³':parseFloat(r.cubos||0).toFixed(2),'KM':r.km||0,
+      'Hor. Saída':fmtT(r.horario_saida),'Hor. Chegada':fmtT(r.horario_chegada),
+      'Tempo Trabalhado':calcTempo(r.horario_saida,r.horario_chegada),
+      'Status':r.status_operacional||'',
+    }));
+
+    // Linha de totais
+    linhas.push({});
+    linhas.push({
+      'Onda':'TOTAIS','Placa':'','Tipo':'','Nº Transporte':'',' Rota':'',
+      'Motorista':`${todos.length} veículos`,'Ajudante 1':'','Ajudante 2':'',
+      'Caixas':todos.reduce((a,r)=>a+(r.qtd_caixas||0),0),
+      'Clientes':todos.reduce((a,r)=>a+(r.num_clientes||0),0),
+      'Cubagem m³':todos.reduce((a,r)=>a+parseFloat(r.cubos||0),0).toFixed(2),
+      'KM':todos.reduce((a,r)=>a+(r.km||0),0),
+      'Hor. Saída':'','Hor. Chegada':'','Tempo Trabalhado':'',
+      'Status':vendaTot?`Venda Total: R$ ${fmt(vendaTot,2)}`:'',
+    });
+
+    const ws=XLSX.utils.json_to_sheet(linhas);
+    ws['!cols']=[{wch:18},{wch:10},{wch:6},{wch:12},{wch:10},{wch:30},{wch:30},{wch:30},{wch:8},{wch:8},{wch:10},{wch:6},{wch:10},{wch:12},{wch:14},{wch:12}];
+    XLSX.utils.book_append_sheet(wb,ws,`Dia ${fd(dtDia)}`);
+    XLSX.writeFile(wb,`Relatorio_Dia_${dtDia}.xlsx`);
+    toast(`Relatório do dia ${fd(dtDia)} exportado!`);
+  }
+
+  return h('div',null,
+    // CABEÇALHO
+    h('div',{className:'sh'},
+      h('div',null,
+        h('h1',{className:'st'},'Fechamento ',h('span',null,'Recargas')),
+        h('div',{className:'ss'},'Timeline completa: 1ª saída + recargas por colaborador')
+      ),
+      h('div',{style:{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}},
+        h('div',{style:{display:'flex',flexDirection:'column',gap:3,alignItems:'flex-end'}},
+          h('div',{style:{display:'flex',gap:6}},
+            h('button',{className:'btn btn-o btn-sm',onClick:expExcel,style:{borderColor:'#00d68f50',color:'var(--grn)'}},'⬇ Excel Timeline'),
+            h('button',{className:'btn btn-r btn-sm',onClick:()=>expPDFRec()},'⬇ PDF por Colaborador'),
+          ),
+          h('div',{style:{display:'flex',gap:6,alignItems:'center'}},
+            h('input',{type:'date',value:dtDia,onChange:e=>setDtDia(e.target.value),
+              style:{width:140,fontSize:12,padding:'4px 8px',height:30}}),
+            h('button',{className:'btn btn-o btn-sm',onClick:expDia,
+              style:{borderColor:'#4d9fff50',color:'var(--blu)',height:30,padding:'0 12px'}},'⬇ Excel do Dia'),
+          )
+        )
+      )
+    ),
+
+    // FILTROS RECARGAS
+    h('div',{className:'fb'},
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Início'),h('input',{type:'date',value:ini,onChange:e=>setIni(e.target.value),style:{width:150}})),
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Fim'),h('input',{type:'date',value:fim,onChange:e=>setFim(e.target.value),style:{width:150}})),
+      h('div',{className:'fg2'},
+        h('label',{className:'lbl'},'Ver'),
+        h('select',{value:view,onChange:e=>setView(e.target.value),style:{width:170}},
+          h('option',{value:'timeline'},'Timeline (1ª Saída + Recargas)'),
+          h('option',{value:'resumo'},'Resumo de Pagamento')
+        )
+      ),
+      h('div',{className:'mk',style:{marginLeft:'auto'}},h('div',{className:'kl'},'Total a Pagar'),h('div',{className:'kv',style:{color:'var(--red)',fontSize:20}},R(tot))),
+      h('div',{className:'mk'},h('div',{className:'kl'},'Recargas'),h('div',{className:'kv',style:{color:'var(--yel)',fontSize:20}},rows.length)),
+    ),
+
+    ld?h(Ldg):
+
+    view==='resumo'?
+    h('div',{className:'card'},
+      h('div',{className:'ch'},h('span',{className:'ct'},'Resumo — Total por Colaborador')),
+      h('div',{className:'tw'},h('table',null,
+        h('thead',null,h('tr',null,h('th',null,'Colaborador'),h('th',null,'Recargas'),h('th',{style:{color:'var(--grn)'}},'Total'),h('th',null,'Status Pgto'))),
+        h('tbody',null,resumoPag.map((r,i)=>{
+          const pago=pagamentos[r.n];
+          return h('tr',{key:i},
+            h('td',{className:'b'},r.n),
+            h('td',{className:'m'},r.rc),
+            h('td',{className:'m b',style:{color:'var(--grn)'}},R(r.t)),
+            h('td',null,
+              pago
+                ? h('div',{style:{display:'flex',alignItems:'center',gap:6}},
+                    h('span',{className:'badge bg'},'✅ PAGO'),
+                    h('button',{className:'btn btn-o btn-xs',onClick:()=>setPagamento(r.n,false),style:{fontSize:10}},'↩')
+                  )
+                : h('button',{
+                    className:'btn btn-r btn-xs',
+                    onClick:()=>setPagamento(r.n,true)
+                  },'💰 PAGAR')
+            )
+          )
+        }))
+      ))
+    ):
+    // TIMELINE
+    timeline.filter(t=>t.recargas&&t.recargas.length>0).length===0?h('div',{className:'emp'},h('div',{style:{fontSize:36,opacity:.3}},'💰'),h('div',null,'Nenhuma recarga no período')):
+    h('div',null,
+      timeline.filter(t=>t.recargas&&t.recargas.length>0).map((t,idx)=>h('div',{key:idx,className:'card',style:{marginBottom:12}},
+        h('div',{className:'ch',style:{background:'var(--s2)'}},
+          h('div',{style:{display:'flex',alignItems:'center',gap:10}},
+            h('span',{className:'badge by'},fd(t.data)),
+            h('span',{className:`badge ${t.funcao==='MOTORISTA'?'bb':'bg'}`},t.funcao),
+            h('span',{style:{fontWeight:700,color:'var(--t1)',fontSize:13}},t.nome),
+          )
+        ),
+        h('div',{className:'tw'},h('table',null,
+          h('thead',null,h('tr',null,
+            h('th',null,'Tipo'),h('th',null,'Nº Transp'),h('th',null,'Placa'),h('th',null,'Rota'),
+            h('th',null,'Caixas'),h('th',null,'KM'),
+            h('th',{style:{color:'var(--blu)'}},'Hor. Saída'),
+            h('th',{style:{color:'var(--grn)'}},'Hor. Chegada'),
+            h('th',null,'Tempo'),h('th',{style:{color:'var(--yel)'}},'Vlr. Rec.')
+          )),
+          h('tbody',null,
+            [
+              t.saida1?h('tr',{key:'s1',style:{background:'#001a3310'}},
+                h('td',null,h('span',{className:'badge bb'},'1ª Saída')),
+                h('td',{className:'m'},t.saida1.num_transporte||'—'),
+                h('td',{className:'m b'},t.saida1.placa||'—'),
+                h('td',{className:'m'},t.saida1.rota||'—'),
+                h('td',{className:'m'},fmt(t.saida1.qtd_caixas||0)),
+                h('td',{className:'m'},fmt(t.saida1.km||0)),
+                h('td',{className:'m',style:{color:'var(--blu)',fontFamily:"'JetBrains Mono',monospace"}},fmtT(t.saida1.horario_saida)),
+                h('td',{className:'m',style:{color:t.saida1.horario_chegada?'var(--grn)':'var(--yel)',fontFamily:"'JetBrains Mono',monospace"}},fmtT(t.saida1.horario_chegada)||'⏳'),
+                h('td',{className:'m'},calcTempo(t.saida1.horario_saida,t.saida1.horario_chegada)),
+                h('td',{style:{color:'var(--t3)',fontSize:10}},'—')
+              ):null,
+              ...t.recargas.map((r,ri)=>h('tr',{key:`r${ri}`,style:{background:'#1a00000d'}},
+                h('td',null,h('span',{className:'badge br'},'⟳ Recarga')),
+                h('td',{className:'m'},r.num_transporte||'—'),
+                h('td',{className:'m b'},r.placa||'—'),
+                h('td',{className:'m'},r.rota||'—'),
+                h('td',{className:'m'},fmt(r.qtd_caixas||0)),
+                h('td',{className:'m'},fmt(r.km||0)),
+                h('td',{className:'m',style:{color:'var(--blu)',fontFamily:"'JetBrains Mono',monospace"}},fmtT(r.horario_saida)),
+                h('td',{className:'m',style:{color:r.horario_chegada?'var(--grn)':'var(--yel)',fontFamily:"'JetBrains Mono',monospace"}},fmtT(r.horario_chegada)||'⏳'),
+                h('td',{className:'m'},calcTempo(r.horario_saida,r.horario_chegada)),
+                h('td',{className:'m b',style:{color:'var(--yel)'}},R(r.valor))
+              ))
+            ].filter(Boolean)
+          )
+        ))
+      ))
+    )
+  )
+}
+
+
+/* DESCARGA */
+function Descarga(){
+  const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);
+  const[dt,setDt]=useState(iso());
+  const[dIni,setDIni]=useState(iso().substring(0,7)+'-01'); // primeiro dia do mês
+  const[dFim,setDFim]=useState(iso()); // hoje
+  const[usePeriod,setUsePeriod]=useState(false); // false=dia, true=período
+  const[filtMat,setFiltMat]=useState('');
+  const[modal,setModal]=useState(false);const[saving,setSaving]=useState(false);
+  const[fr,setFr]=useState([]);
+  const[motoristasLst,setMotoristasLst]=useState([]);
+  const[modalCliente,setModalCliente]=useState(false);
+  const[clienteEdit,setClienteEdit]=useState(null);
+  const[savingCliente,setSavingCliente]=useState(false);
+  const[buscaCliente,setBuscaCliente]=useState('');
+  const[listaClientes,setListaClientes]=useState([]);
+  const[viewClientes,setViewClientes]=useState(false);
+  const[FC,setFC]=useState({matricula:'',razao_social:'',canal:'',territorio:'',gerencia:'',valor_pallet:''});
+  const[buscandoMat,setBuscandoMat]=useState(false);
+  // autocomplete nome por matrícula
+  const[sugestoes,setSugestoes]=useState([]);
+  // autocomplete busca por nome
+  const[res,setRes]=useState([]);
+  const[F,setF]=useState({
+    data:iso(),placa:'',motorista_nome:'',num_transporte:'',rota:'',
+    matricula_cliente:'',pesquisa_nome:'',razao_social:'',canal:'',
+    territorio:'',gerencia:'',qtd_paletes:1,valor_pallet:0,obs:''
+  });
+  // Estado de busca ativa para período
+  const[buscaAtiva,setBuscaAtiva]=useState({usePeriod:false,dt:iso(),dIni:iso().substring(0,7)+'-01',dFim:iso()});
+
+  useEffect(()=>{loadR();loadFr();loadMotoristas()},[]);
+
+  async function loadR(override){
+    const cfg=override||buscaAtiva;
+    setLd(true);
+    try{
+      let d;
+      if(cfg.usePeriod){
+        const todos=await db.get('descarga_lancamento',{},{order:'data.asc,created_at.desc'});
+        d=todos.filter(r=>r.data>=cfg.dIni&&r.data<=cfg.dFim);
+      }else{
+        d=await db.get('descarga_lancamento',{data:cfg.dt},{order:'created_at.desc'});
+      }
+      setRows(d);
+    }catch(e){}
+    setLd(false);
+  }
+
+  function buscar(){
+    const cfg={usePeriod,dt,dIni,dFim};
+    setBuscaAtiva(cfg);
+    loadR(cfg);
+  }
+  async function loadFr(){
+    try{const d=await db.get('frota',{status:'ATIVO'},{select:'placa,tipo',order:'placa.asc'});setFr(d)}
+    catch(e){}
+  }
+  async function loadMotoristas(){
+    try{const d=await db.get('equipe',{funcao:'MOTORISTA',status:'ATIVO'},{select:'nome',order:'nome.asc'});setMotoristasLst(d)}
+    catch(e){}
+  }
+
+  // Autocomplete MATRÍCULA → busca cliente
+  async function onMatriculaChange(val){
+    setF(f=>({...f,matricula_cliente:val,razao_social:'',canal:'',territorio:'',gerencia:'',valor_pallet:0}));
+    if(val.length>=6){
+      setBuscandoMat(true);
+      try{
+        const d=await db.get('descarga_ref',{matricula:val},{select:'matricula,razao_social,canal,territorio,gerencia,valor_pallet'});
+        if(d&&d.length>0){
+          const c=d[0];
+          setF(f=>({...f,matricula_cliente:c.matricula,razao_social:c.razao_social,
+            canal:c.canal,territorio:c.territorio,gerencia:c.gerencia,
+            valor_pallet:c.valor_pallet,pesquisa_nome:c.razao_social}));
+          setSugestoes([]);
+        }
+      }catch(e){}
+      setBuscandoMat(false);
+    }
+  }
+
+  // Autocomplete NOME → busca por nome parcial
+  async function buscarPorNome(t){
+    if(!t||t.length<3){setRes([]);return}
+    try{const d=await db.get('descarga_ref',{},{ilike:{razao_social:t},limit:8});setRes(d)}
+    catch(e){}
+  }
+  function selCliente(c){
+    setF(f=>({...f,pesquisa_nome:c.razao_social,matricula_cliente:c.matricula,
+      razao_social:c.razao_social,canal:c.canal,territorio:c.territorio,
+      gerencia:c.gerencia,valor_pallet:c.valor_pallet}));
+    setRes([]);
+  }
+
+  async function loadClientes(busca){
+    try{
+      const opts=busca&&busca.length>=2?{ilike:{razao_social:busca},limit:50}:{limit:50,order:'razao_social.asc'};
+      const d=await db.get('descarga_ref',{},opts);
+      setListaClientes(d||[]);
+    }catch(e){}
+  }
+
+  async function salvarCliente(){
+    if(!FC.matricula||!FC.razao_social){toast('Matrícula e Razão Social obrigatórios','err');return;}
+    setSavingCliente(true);
+    try{
+      const payload={matricula:FC.matricula.trim(),razao_social:FC.razao_social.trim().toUpperCase(),canal:FC.canal||'A DEFINIR',territorio:FC.territorio||'A DEFINIR',gerencia:FC.gerencia||'A DEFINIR',valor_pallet:parseFloat(FC.valor_pallet)||0};
+      if(clienteEdit){
+        const r=await fetch(SURL+'/rest/v1/descarga_ref?matricula=eq.'+encodeURIComponent(FC.matricula),{method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify(payload)});
+        if(!r.ok)throw new Error(await r.text());
+        toast('Cliente atualizado!');
+      }else{
+        await db.post('descarga_ref',payload);
+        toast('Cliente cadastrado!');
+      }
+      setModalCliente(false);setClienteEdit(null);loadClientes(buscaCliente);
+    }catch(e){toast('Erro: '+e.message,'err')}
+    setSavingCliente(false);
+  }
+
+  async function marcarReembolso(id, status){
+    try{
+      const payload={status_reembolso:status};
+      if(status==='REEMBOLSADO')payload.data_reembolso=iso();
+      else payload.data_reembolso=null;
+      const r=await fetch(SURL+'/rest/v1/descarga_lancamento?id=eq.'+id,
+        {method:'PATCH',headers:{...HDR,'Prefer':'return=minimal'},body:JSON.stringify(payload)});
+      if(!r.ok)throw new Error(await r.text());
+      toast(status==='REEMBOLSADO'?'✅ Marcado como PAGO!':'↩ Revertido para PENDENTE');
+      loadR();
+    }catch(e){toast('Erro: '+e.message,'err')}
+  }
+
+  function abrirEditarCliente(c){
+    setClienteEdit(c);
+    setFC({matricula:c.matricula||'',razao_social:c.razao_social||'',canal:c.canal||'',territorio:c.territorio||'',gerencia:c.gerencia||'',valor_pallet:c.valor_pallet||''});
+    setModalCliente(true);
+  }
+
+  async function salvar(){
+    if(!F.placa){toast('Placa obrigatória','err');return}
+    if(!F.motorista_nome){toast('Motorista obrigatório','err');return}
+    setSaving(true);
+    try{
+      await db.post('descarga_lancamento',{
+        ...F,
+        qtd_paletes:parseInt(F.qtd_paletes)||1,
+        valor_pallet:parseFloat(F.valor_pallet)||0,
+        reembolsavel:!!(F.matricula_cliente)
+      });
+      toast('Descarga registrada!');setModal(false);loadR();
+      setF(f=>({...f,placa:'',motorista_nome:'',num_transporte:'',rota:'',
+        matricula_cliente:'',pesquisa_nome:'',razao_social:'',canal:'',
+        territorio:'',gerencia:'',qtd_paletes:1,valor_pallet:0,obs:''}));
+    }catch(e){toast('Erro: '+e.message,'err')}
+    setSaving(false);
+  }
+
+  // ── EXCEL COMPLETO
+  function expExcel(){
+    if(!rowsFilt.length){toast('Sem dados','err');return}
+    const ws=XLSX.utils.json_to_sheet(rowsFilt.map(r=>({
+      'Data':fd(r.data),
+      'Placa':r.placa||'',
+      'Motorista':r.motorista_nome||'',
+      'Nº Transporte':r.num_transporte||'',
+      'Rota':r.rota||'',
+      'Matrícula Cliente':r.matricula_cliente||'',
+      'Razão Social / Cliente':r.razao_social||r.pesquisa_nome||'',
+      'Canal':r.canal||'',
+      'Território':r.territorio||'',
+      'Gerência':r.gerencia||'',
+      'Qtd Paletes':r.qtd_paletes||1,
+      'Valor por Pallet (R$)':parseFloat(r.valor_pallet||0).toFixed(2),
+      'Total (R$)':((r.qtd_paletes||1)*(r.valor_pallet||0)).toFixed(2),
+      'Observações':r.obs||''
+    })));
+    // Largura das colunas
+    ws['!cols']=[
+      {wch:12},{wch:10},{wch:30},{wch:14},{wch:10},
+      {wch:16},{wch:40},{wch:20},{wch:22},{wch:25},
+      {wch:12},{wch:18},{wch:14},{wch:12},{wch:30}
+    ];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Descarga FEMSA');
+    XLSX.writeFile(wb,`Descarga_FEMSA_${dt}.xlsx`);
+    toast('Excel gerado com todos os campos!');
+  }
+
+  // ── PDF COMPLETO
+  function expPDF(){
+    if(!rowsFilt.length){toast('Sem dados','err');return}
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const pW=doc.internal.pageSize.getWidth();
+
+    // Cabeçalho
+    doc.setFillColor(232,25,90);doc.rect(0,0,pW,16,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(13);doc.setFont('helvetica','bold');
+    doc.text('MURICI LOGÍSTICA — DESCARGA FEMSA',14,10);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.text(`Data: ${fd(dt)}   |   Gerado em: ${new Date().toLocaleString('pt-BR')}`,14,15);
+
+    // Totais
+    const totR=rowsFilt.filter(r=>r.reembolsavel).reduce((a,r)=>a+(r.qtd_paletes||1)*(r.valor_pallet||0),0);
+    const totN=rowsFilt.filter(r=>!r.reembolsavel).reduce((a,r)=>a+(r.qtd_paletes||1)*(r.valor_pallet||0),0);
+    doc.setTextColor(0,0,0);doc.setFontSize(9);
+    doc.setFillColor(240,255,248);doc.rect(14,19,120,10,'F');
+    doc.setTextColor(0,160,100);doc.setFont('helvetica','bold');
+    doc.text(`Reembolsável: R$ ${totR.toLocaleString('pt-BR',{minimumFractionDigits:2})}`,17,25);
+    doc.setFillColor(255,240,240);doc.rect(138,19,100,10,'F');
+    doc.setTextColor(200,30,60);
+    doc.text(`Não Reembolsável: R$ ${totN.toLocaleString('pt-BR',{minimumFractionDigits:2})}`,141,25);
+    doc.setTextColor(0,0,0);doc.setFont('helvetica','normal');
+
+    // Tabela cabeçalho
+    const cols=['Data','Placa','Motorista','Nº Transp','Rota','Matrícula','Cliente','Canal','Paletes','Vl.Pallet','Total','Reemb.'];
+    const xs=[14,28,40,73,88,100,118,165,185,194,208,224];
+    let y=36;
+    doc.setFillColor(40,40,60);doc.rect(14,y-5,pW-28,8,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+    cols.forEach((c,i)=>doc.text(c,xs[i],y));
+    doc.setFont('helvetica','normal');doc.setFontSize(7);
+    y+=6;
+
+    rowsFilt.forEach((r,idx)=>{
+      if(y>185){doc.addPage();y=15}
+      if(idx%2===0){doc.setFillColor(248,248,255);doc.rect(14,y-4,pW-28,7,'F')}
+      doc.setTextColor(20,20,40);
+      const total=((r.qtd_paletes||1)*(r.valor_pallet||0));
+      const vals=[
+        fd(r.data),
+        r.placa||'',
+        (r.motorista_nome||'').substring(0,14),
+        String(r.num_transporte||''),
+        r.rota||'',
+        r.matricula_cliente||'',
+        (r.razao_social||r.pesquisa_nome||'').substring(0,22),
+        (r.canal||'').substring(0,10),
+        String(r.qtd_paletes||1),
+        `R$${parseFloat(r.valor_pallet||0).toFixed(2)}`,
+        `R$${total.toFixed(2)}`,
+        r.reembolsavel?'SIM':'NÃO'
+      ];
+      vals.forEach((v,i)=>{
+        if(i===11){doc.setTextColor(r.reembolsavel?0:200,r.reembolsavel?140:30,r.reembolsavel?60:60)}
+        else doc.setTextColor(20,20,40);
+        doc.text(String(v),xs[i],y);
+      });
+      y+=7;
+    });
+
+    // Totais finais
+    y+=4;
+    doc.setLineWidth(0.5);doc.setDrawColor(232,25,90);doc.line(14,y,pW-14,y);y+=6;
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(232,25,90);
+    const totGeral=totR+totN;
+    doc.text(`TOTAL GERAL: R$ ${totGeral.toLocaleString('pt-BR',{minimumFractionDigits:2})}`,14,y);
+    doc.text(`(${rowsFilt.length} registros)`,pW-50,y);
+
+    doc.save(`Descarga_FEMSA_${dt}.pdf`);
+    toast('PDF gerado com todos os campos!');
+  }
+
+  const rowsFilt=filtMat.trim()?rows.filter(r=>(r.matricula_cliente||'').includes(filtMat.trim())):rows;
+  const tR=rowsFilt.filter(r=>r.reembolsavel).reduce((a,r)=>a+(r.qtd_paletes||1)*(r.valor_pallet||0),0);
+  const tN=rowsFilt.filter(r=>!r.reembolsavel).reduce((a,r)=>a+(r.qtd_paletes||1)*(r.valor_pallet||0),0);
+
+  return h('div',null,
+    h('div',{className:'sh'},
+      h('div',null,h('h1',{className:'st'},'Descarga ',h('span',null,'FEMSA')),h('div',{className:'ss'},'Clientes homologados — reembolso automático')),
+      h('div',{style:{display:'flex',gap:8,flexWrap:'wrap'}},
+        h('button',{className:'btn btn-o btn-sm',onClick:expExcel},'⬇ Excel'),
+        h('button',{className:'btn btn-o btn-sm',style:{borderColor:'#e8195a50',color:'var(--red)'},onClick:()=>expPDF()},'⬇ PDF'),
+        h('button',{className:'btn btn-r',onClick:()=>setModal(true)},'+ Registrar Descarga'),
+        h('button',{className:'btn btn-o btn-sm',style:{borderColor:'#00d68f50',color:'var(--grn)'},onClick:()=>{setClienteEdit(null);setModalCliente(true)}},'+ Cliente FEMSA'),
+      )
+    ),
+
+    // Tabs dia / período
+    h('div',{style:{display:'flex',gap:8,marginBottom:12}},
+      h('button',{
+        className:'btn btn-sm',
+        onClick:()=>{setUsePeriod(false);setTimeout(()=>{const cfg={usePeriod:false,dt,dIni,dFim};setBuscaAtiva(cfg);loadR(cfg)},0)},
+        style:{background:!usePeriod?'var(--red)':'var(--s2)',color:!usePeriod?'#fff':'var(--t2)',border:'1px solid var(--b2)'}
+      },'📅 Por Dia'),
+      h('button',{
+        className:'btn btn-sm',
+        onClick:()=>{setUsePeriod(true);setTimeout(()=>{const cfg={usePeriod:true,dt,dIni,dFim};setBuscaAtiva(cfg);loadR(cfg)},0)},
+        style:{background:usePeriod?'var(--red)':'var(--s2)',color:usePeriod?'#fff':'var(--t2)',border:'1px solid var(--b2)'}
+      },'📆 Por Período')
+    ),
+
+    h('div',{className:'fb'},
+      h('div',{style:{display:'flex',gap:10,alignItems:'flex-end',flexWrap:'wrap',width:'100%'}},
+        !usePeriod
+          ? h('div',{className:'fg2'},
+              h('label',{className:'lbl'},'Data'),
+              h('input',{type:'date',value:dt,onChange:e=>setDt(e.target.value),onKeyDown:e=>e.key==='Enter'&&buscar(),style:{width:150}})
+            )
+          : h(React.Fragment,null,
+              h('div',{className:'fg2'},h('label',{className:'lbl'},'Início'),h('input',{type:'date',value:dIni,onChange:e=>setDIni(e.target.value),onKeyDown:e=>e.key==='Enter'&&buscar(),style:{width:150}})),
+              h('div',{className:'fg2'},h('label',{className:'lbl'},'Fim'),h('input',{type:'date',value:dFim,onChange:e=>setDFim(e.target.value),onKeyDown:e=>e.key==='Enter'&&buscar(),style:{width:150}}))
+            ),
+        h('button',{
+          onClick:buscar,
+          style:{height:36,minWidth:110,padding:'0 18px',background:'linear-gradient(135deg,#e8195a,#ff4d6d)',color:'#fff',border:'none',borderRadius:8,fontWeight:700,fontSize:13,cursor:'pointer',boxShadow:'0 2px 10px #e8195a55',alignSelf:'flex-end',marginBottom:0,flexShrink:0}
+        },'🔍 BUSCAR'),
+        h('div',{style:{flex:1,minWidth:160}},
+          h('label',{className:'lbl'},'Filtrar por Matrícula'),
+          h('input',{type:'text',placeholder:'Ex: 710...',value:filtMat,onChange:e=>setFiltMat(e.target.value),style:{width:'100%'}})
+        ),
+        filtMat&&h('button',{className:'btn btn-o btn-xs',onClick:()=>setFiltMat(''),style:{alignSelf:'flex-end'}},'✕'),
+      )
+    ),
+
+    // KPI cards visuais
+    h('div',{className:'kg',style:{marginBottom:16}},
+      h('div',{className:'kc y'},
+        h('div',{className:'kl'},'⏳ Pendente'),
+        h('div',{className:'kv',style:{fontSize:16}},R(rowsFilt.filter(r=>r.reembolsavel&&r.status_reembolso!=='REEMBOLSADO').reduce((a,r)=>a+(r.qtd_paletes||1)*(r.valor_pallet||0),0))),
+        h('div',{className:'ks'},rowsFilt.filter(r=>r.reembolsavel&&r.status_reembolso!=='REEMBOLSADO').length+' pendentes')
+      ),
+      h('div',{className:'kc g'},
+        h('div',{className:'kl'},'✅ Pago'),
+        h('div',{className:'kv',style:{fontSize:16}},R(rowsFilt.filter(r=>r.status_reembolso==='REEMBOLSADO').reduce((a,r)=>a+(r.qtd_paletes||1)*(r.valor_pallet||0),0))),
+        h('div',{className:'ks'},rowsFilt.filter(r=>r.status_reembolso==='REEMBOLSADO').length+' recebidos')
+      ),
+      h('div',{className:'kc r'},
+        h('div',{className:'kl'},'❌ Não Reembolsável'),
+        h('div',{className:'kv',style:{fontSize:16}},R(tN)),
+        h('div',{className:'ks'},rowsFilt.filter(r=>!r.reembolsavel).length+' registros')
+      ),
+      h('div',{className:'kc b'},
+        h('div',{className:'kl'},'📅 Dias / Total'),
+        h('div',{className:'kv'},new Set(rowsFilt.map(r=>r.data)).size),
+        h('div',{className:'ks'},rowsFilt.length+' lançamentos')
+      ),
+    ),
+
+    ld?h(Ldg):rowsFilt.length===0?h(Emp,{i:'📦',t:filtMat?`Nenhuma descarga com matrícula "${filtMat}"`:buscaAtiva.usePeriod?`Nenhuma descarga de ${fd(buscaAtiva.dIni)} a ${fd(buscaAtiva.dFim)}`:`Nenhuma descarga em ${fd(buscaAtiva.dt)}`}):
+    h('div',{className:'card'},
+      h('div',{className:'tw'},
+        h('table',null,
+          h('thead',null,h('tr',null,
+            h('th',null,'Data'),h('th',null,'Placa'),h('th',null,'Motorista'),h('th',{style:{color:'var(--yel)'}},'★ Matrícula'),
+            h('th',null,'Cliente'),h('th',null,'Canal'),h('th',null,'Nº Transp'),h('th',null,'Rota'),
+            h('th',null,'Paletes'),h('th',null,'Vl.Pallet'),h('th',null,'Total'),
+            h('th',{style:{color:'var(--grn)'}},'Reembolso'),h('th',null,'Ação')
+          )),
+          h('tbody',null,rowsFilt.map(r=>h('tr',{key:r.id,style:{opacity:r.status_reembolso==='REEMBOLSADO'?0.7:1}},
+            h('td',{className:'m'},fd(r.data)),
+            h('td',{className:'b m'},r.placa),
+            h('td',null,r.motorista_nome||'—'),
+            h('td',null,r.matricula_cliente?h('span',{className:'badge bb',style:{fontFamily:"'JetBrains Mono',monospace",fontSize:11}},r.matricula_cliente):h('span',{style:{color:'var(--t3)'}},'—')),
+            h('td',{className:'b',style:{maxWidth:160,whiteSpace:'normal',fontSize:11}},r.razao_social||r.pesquisa_nome||'—'),
+            h('td',{style:{fontSize:11}},r.canal||'—'),
+            h('td',{className:'m'},r.num_transporte||'—'),
+            h('td',{className:'m'},r.rota||'—'),
+            h('td',{className:'m'},r.qtd_paletes||1),
+            h('td',{className:'m'},R(r.valor_pallet)),
+            h('td',{className:'m b',style:{color:'var(--grn)'}},R((r.qtd_paletes||1)*(r.valor_pallet||0))),
+            // STATUS REEMBOLSO
+            h('td',null,
+              r.status_reembolso==='REEMBOLSADO'
+                ? h('div',null,
+                    h('span',{className:'badge bg'},'✅ PAGO'),
+                    r.data_reembolso&&h('div',{style:{fontSize:9,color:'var(--t3)',marginTop:2}},fd(r.data_reembolso))
+                  )
+                : h('span',{className:'badge by'},'⏳ PENDENTE')
+            ),
+            // BOTÃO AÇÃO
+            h('td',null,
+              r.reembolsavel&&(
+                r.status_reembolso==='REEMBOLSADO'
+                  ? h('button',{
+                      className:'btn btn-xs btn-o',
+                      onClick:()=>marcarReembolso(r.id,'PENDENTE'),
+                      title:'Reverter para Pendente'
+                    },'↩ Pendente')
+                  : h('button',{
+                      className:'btn btn-xs',
+                      onClick:()=>marcarReembolso(r.id,'REEMBOLSADO'),
+                      style:{background:'#00d68f',color:'#000',border:'none',borderRadius:5,padding:'4px 8px',cursor:'pointer',fontSize:10,fontWeight:700,fontFamily:'Inter,sans-serif'}
+                    },'✓ Pago')
+              )
+            )
+          )))
+        )
+      )
+    ),
+
+    // ── MODAL
+    modal&&h('div',{className:'ov',onClick:e=>e.target.className.includes('ov')&&setModal(false)},
+      h('div',{className:'mod'},
+        h('div',{className:'mh'},h('div',{className:'mt'},'📦 Registrar Descarga'),h('button',{className:'btn btn-o btn-xs',onClick:()=>setModal(false)},'✕')),
+        h('div',{className:'mb'},
+
+          // MATRÍCULA DO CLIENTE com autocomplete
+          h('div',{className:'al al-b',style:{marginBottom:12}},
+            h('div',null,
+              h('div',{style:{fontWeight:700,marginBottom:3}},'★ Matrícula do Cliente'),
+              h('div',{style:{fontSize:11}},'Digite a matrícula para preencher o cliente automaticamente.')
+            )
+          ),
+          h('div',{className:'fg',style:{position:'relative'}},
+            h('label',{className:'lbl'},buscandoMat?'Matrícula do Cliente — 🔄 buscando...':'Matrícula do Cliente (FEMSA)'),
+            h('input',{
+              type:'text',placeholder:'Ex: 7100068543',
+              value:F.matricula_cliente,
+              onChange:e=>onMatriculaChange(e.target.value),
+              style:{fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.5px',
+                borderColor:F.razao_social?'#00d68f':undefined}
+            })
+          ),
+          // Feedback do cliente encontrado pela matrícula
+          F.razao_social&&h('div',{className:'al al-g',style:{marginBottom:8}},
+            '✅ ',h('strong',null,F.razao_social),
+            h('span',{style:{marginLeft:8,opacity:.7,fontSize:11}},` · ${F.canal||''} · R$ ${F.valor_pallet||0}`)
+          ),
+
+          h('div',{className:'dv'}),
+
+          // DADOS DA SAÍDA
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Data'),h('input',{type:'date',value:F.data,onChange:e=>setF(f=>({...f,data:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Placa'),
+              h('select',{value:F.placa,onChange:e=>setF(f=>({...f,placa:e.target.value}))},
+                h('option',{value:''},'Selecionar placa...'),
+                fr.map(v=>h('option',{key:v.placa,value:v.placa},`${v.placa} — ${v.tipo}`))
+              )
+            )
+          ),
+          h('div',{className:'r2'},
+            // MOTORISTA → dropdown com motoristas do banco
+            h('div',{className:'fg'},
+              h('label',{className:'lbl'},'Motorista'),
+              h('select',{
+                value:F.motorista_nome,
+                onChange:e=>setF(f=>({...f,motorista_nome:e.target.value})),
+                style:{color:F.motorista_nome?'#111827':'#6b7280'}
+              },
+                h('option',{value:''},'Selecionar motorista...'),
+                motoristasLst.map(m=>h('option',{key:m.nome,value:m.nome},m.nome))
+              )
+            ),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Nº Transporte'),h('input',{type:'number',value:F.num_transporte,onChange:e=>setF(f=>({...f,num_transporte:e.target.value}))}))
+          ),
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Rota'),h('input',{type:'text',value:F.rota,onChange:e=>setF(f=>({...f,rota:e.target.value.toUpperCase()}))})),
+
+          h('div',{className:'dv'}),
+
+          // BUSCA POR NOME (alternativa)
+          h('div',{className:'fg',style:{position:'relative'}},
+            h('label',{className:'lbl'},'🔍 Ou busque por Nome do Cliente (opcional)'),
+            h('input',{type:'text',value:F.pesquisa_nome,placeholder:'Digite parte do nome...',
+              onChange:e=>{setF(f=>({...f,pesquisa_nome:e.target.value}));buscarPorNome(e.target.value)}}),
+            res.length>0&&h('div',{className:'dr'},
+              res.map(c=>h('div',{key:c.matricula,className:'di',onClick:()=>selCliente(c)},
+                h('div',{className:'di-n'},c.razao_social),
+                h('div',{className:'di-s'},`Mat: ${c.matricula} · ${c.canal} · R$${c.valor_pallet}`)
+              ))
+            )
+          ),
+
+          // VALORES
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Qtd Paletes'),h('input',{type:'number',min:1,value:F.qtd_paletes,onChange:e=>setF(f=>({...f,qtd_paletes:parseInt(e.target.value)||1}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Valor Pallet (R$)'),h('input',{type:'number',step:'0.01',value:F.valor_pallet,onChange:e=>setF(f=>({...f,valor_pallet:parseFloat(e.target.value)||0}))}))
+          ),
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Observações'),h('input',{type:'text',value:F.obs||'',placeholder:'Opcional...',onChange:e=>setF(f=>({...f,obs:e.target.value}))})),
+          h('div',{className:'al al-b'},'Total calculado: ',h('strong',null,R(F.qtd_paletes*F.valor_pallet))),
+        ),
+        h('div',{className:'mf'},
+          h('button',{className:'btn btn-o',onClick:()=>setModal(false)},'Cancelar'),
+          h('button',{className:'btn btn-r',onClick:salvar,disabled:saving},saving?'Salvando...':'✓ Registrar')
+        )
+      )
+    ),
+
+    // ── LISTA DE CLIENTES FEMSA ──────────────────────────
+    viewClientes&&h('div',{className:'card',style:{marginTop:14}},
+      h('div',{className:'ch'},
+        h('span',{className:'ct'},'📋 Clientes FEMSA Cadastrados'),
+        h('button',{className:'btn btn-o btn-xs',onClick:()=>setViewClientes(false)},'✕ Fechar')
+      ),
+      h('div',{style:{padding:'10px 16px',borderBottom:'1px solid var(--b1)',display:'flex',gap:10}},
+        h('input',{type:'text',placeholder:'Buscar por nome...',value:buscaCliente,
+          onChange:e=>{setBuscaCliente(e.target.value);loadClientes(e.target.value)},
+          style:{maxWidth:300}}),
+        h('button',{className:'btn btn-o btn-sm',onClick:()=>loadClientes(buscaCliente)},'🔍 Buscar')
+      ),
+      h('div',{className:'tw'},h('table',null,
+        h('thead',null,h('tr',null,
+          h('th',null,'Matrícula'),h('th',null,'Razão Social'),h('th',null,'Canal'),
+          h('th',null,'Território'),h('th',null,'Gerência'),
+          h('th',{style:{color:'var(--grn)'}},'Vl. Pallet'),h('th',null,'')
+        )),
+        h('tbody',null,listaClientes.map(c=>h('tr',{key:c.matricula},
+          h('td',{className:'m b'},c.matricula),
+          h('td',{className:'b',style:{maxWidth:200,whiteSpace:'normal'}},c.razao_social),
+          h('td',{style:{fontSize:11}},c.canal||'—'),
+          h('td',{style:{fontSize:11}},c.territorio||'—'),
+          h('td',{style:{fontSize:11}},c.gerencia||'—'),
+          h('td',{className:'m',style:{color:'var(--grn)'}},c.valor_pallet?'R$ '+parseFloat(c.valor_pallet).toFixed(2):'—'),
+          h('td',null,h('button',{className:'btn btn-o btn-xs',onClick:()=>abrirEditarCliente(c)},'✏️ Editar'))
+        )))
+      ))
+    ),
+
+    // ── MODAL CADASTRO CLIENTE FEMSA ─────────────────────
+    modalCliente&&h('div',{className:'ov',onClick:e=>e.target.className.includes('ov')&&setModalCliente(false)},
+      h('div',{className:'mod'},
+        h('div',{className:'mh'},
+          h('div',null,
+            h('div',{className:'mt'},clienteEdit?'✏️ Editar Cliente FEMSA':'+ Cadastrar Cliente FEMSA'),
+            h('div',{style:{fontSize:11,color:'var(--t3)',marginTop:3}},
+              clienteEdit?'Atualize os dados e salve':'Preencha o que tiver — edite depois quando receber os demais dados'
+            )
+          ),
+          h('button',{className:'btn btn-o btn-xs',onClick:()=>setModalCliente(false)},'✕')
+        ),
+        h('div',{className:'mb'},
+          h('div',{className:'al al-b',style:{marginBottom:12}},
+            h('div',null,
+              h('div',{style:{fontWeight:700,marginBottom:3}},'Campos obrigatórios: Matrícula e Razão Social'),
+              h('div',{style:{fontSize:11}},'Canal, Território, Gerência e Valor podem ser preenchidos depois.')
+            )
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},
+              h('label',{className:'lbl'},'Matrícula FEMSA ★'),
+              h('input',{type:'text',placeholder:'Ex: 7110653908',value:FC.matricula,
+                disabled:!!clienteEdit,
+                onChange:e=>setFC(f=>({...f,matricula:e.target.value})),
+                style:{fontFamily:"'JetBrains Mono',monospace"}})
+            ),
+            h('div',{className:'fg'},
+              h('label',{className:'lbl'},'Valor por Pallet (R$)'),
+              h('input',{type:'number',step:'0.01',placeholder:'Ex: 18.00',value:FC.valor_pallet,
+                onChange:e=>setFC(f=>({...f,valor_pallet:e.target.value}))})
+            )
+          ),
+          h('div',{className:'fg'},
+            h('label',{className:'lbl'},'Razão Social ★'),
+            h('input',{type:'text',placeholder:'Nome completo do cliente',value:FC.razao_social,
+              onChange:e=>setFC(f=>({...f,razao_social:e.target.value.toUpperCase()}))})
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},
+              h('label',{className:'lbl'},'Canal'),
+              h('input',{type:'text',placeholder:'Ex: DISTRIBUIDOR DE BEBIDAS',value:FC.canal,
+                onChange:e=>setFC(f=>({...f,canal:e.target.value.toUpperCase()}))})
+            ),
+            h('div',{className:'fg'},
+              h('label',{className:'lbl'},'Território'),
+              h('input',{type:'text',placeholder:'Ex: TERRIT. SPM',value:FC.territorio,
+                onChange:e=>setFC(f=>({...f,territorio:e.target.value.toUpperCase()}))})
+            )
+          ),
+          h('div',{className:'fg'},
+            h('label',{className:'lbl'},'Gerência'),
+            h('input',{type:'text',placeholder:'Ex: GV AS SPM',value:FC.gerencia,
+              onChange:e=>setFC(f=>({...f,gerencia:e.target.value.toUpperCase()}))})
+          ),
+        ),
+        h('div',{className:'mf'},
+          h('button',{className:'btn btn-o',onClick:()=>setModalCliente(false)},'Cancelar'),
+          h('button',{className:'btn btn-r',onClick:salvarCliente,disabled:savingCliente},
+            savingCliente?'Salvando...':clienteEdit?'✓ Atualizar':'✓ Cadastrar')
+        )
+      )
+    )
+  )
+}
+
+
+/* RANKING DE INCENTIVOS */
+function Ranking(){
+  const[dados,setDados]=useState(null);const[ld,setLd]=useState(true);
+  const[ini,setIni]=useState('2026-04-01');const[fim,setFim]=useState('2026-04-30');
+  const[tipo,setTipo]=useState('MOTORISTA');
+
+  useEffect(()=>{load()},[ini,fim,tipo]);
+
+  async function load(){
+    setLd(true);
+    try{
+      // Buscar equipe para usar funcao real do cadastro
+      const equipeData=await db.get('equipe',{},{select:'nome,funcao'});
+      const equipeMap={};
+      equipeData.forEach(e=>{equipeMap[e.nome.trim()]=e.funcao});
+      function getFuncaoReal(nome){return equipeMap[nome?.trim()]||null;}
+
+      // Buscar todas as saídas do período
+      const rows=await db.get('entrada_diaria',{},{order:'data.asc'});
+      const filtradas=rows.filter(r=>r.data>=ini&&r.data<=fim);
+
+      // Separar 1ª Saídas e Recargas
+      const saidas=filtradas.filter(r=>r.status_operacional==='1ª Saída');
+      const recargas=filtradas.filter(r=>r.status_operacional==='Recarga');
+
+      // Calcular métricas por colaborador
+      const mapa={};
+
+      function addColaborador(nome,tipoFunc,tveiculo,isMotorista){
+        if(!nome)return;
+        // Usar funcao real do cadastro de equipe
+        const funcaoReal=getFuncaoReal(nome)||tipoFunc;
+        if(!mapa[nome])mapa[nome]={
+          nome,funcao:funcaoReal,saidas:0,recargas:0,
+          caixas:0,cubos:0,km:0,clientes:0,
+          tempoMin:0,contTempos:0,
+          pontualidades:[],van:0,vuc:0,
+          caixasHora:[]
+        };
+        if(tveiculo==='VAN')mapa[nome].van++;
+        else if(tveiculo==='VUC')mapa[nome].vuc++;
+      }
+
+      // Processar saídas
+      saidas.forEach(s=>{
+        // Motorista
+        addColaborador(s.motorista_nome,'MOTORISTA',s.tipo_veiculo,true);
+        if(s.motorista_nome&&mapa[s.motorista_nome]){
+          const m=mapa[s.motorista_nome];
+          m.saidas++;m.caixas+=s.qtd_caixas||0;
+          m.cubos+=parseFloat(s.cubos)||0;m.km+=s.km||0;
+          m.clientes+=s.num_clientes||0;
+          // Horários
+          if(s.horario_saida&&s.horario_chegada){
+            const [hs,ms]=s.horario_saida.split(':').map(Number);
+            const [hc,mc]=s.horario_chegada.split(':').map(Number);
+            const diffMin=(hc*60+mc)-(hs*60+ms);
+            if(diffMin>0){
+              m.tempoMin+=diffMin;m.contTempos++;
+              // Caixas por hora
+              const hrs=diffMin/60;
+              if(hrs>0)m.caixasHora.push((s.qtd_caixas||0)/hrs);
+              // Pontualidade: VAN sai 06:30, VUC sai 07:00
+              const limSaida=s.tipo_veiculo==='VAN'?390:420; // 06:30=390min, 07:00=420min
+              const saidaMin=hs*60+ms;
+              m.pontualidades.push(Math.max(0,100-Math.max(0,(saidaMin-limSaida))*5));
+            }
+          }
+        }
+        // Ajudantes
+        [s.ajudante1_nome,s.ajudante2_nome].forEach(aj=>{
+          if(!aj)return;
+          addColaborador(aj,'AJUDANTE',s.tipo_veiculo,false);
+          if(mapa[aj]){
+            mapa[aj].saidas++;mapa[aj].caixas+=s.qtd_caixas||0;
+            mapa[aj].cubos+=parseFloat(s.cubos)||0;
+          }
+        });
+      });
+
+      // Recargas
+      recargas.forEach(s=>{
+        if(s.motorista_nome&&mapa[s.motorista_nome])mapa[s.motorista_nome].recargas++;
+        [s.ajudante1_nome,s.ajudante2_nome].forEach(aj=>{
+          if(aj&&mapa[aj])mapa[aj].recargas++;
+        });
+      });
+
+      // Calcular score final
+      const lista=Object.values(mapa).filter(m=>m.funcao===tipo&&(m.saidas>0||m.recargas>0));
+      lista.forEach(m=>{
+        const pont=m.pontualidades.length>0?m.pontualidades.reduce((a,b)=>a+b,0)/m.pontualidades.length:50;
+        const efic=m.caixasHora.length>0?m.caixasHora.reduce((a,b)=>a+b,0)/m.caixasHora.length:0;
+        // Fator VAN: aplica 2.1x em caixas e cubos para equilibrar com VUC
+        const isVAN=m.van>m.vuc;
+        const fatorVan=isVAN?2.1:1.0;
+        const caixasAjustadas=m.caixas*fatorVan;
+        const cubosAjustados=m.cubos*fatorVan;
+        m.pontMedia=pont;
+        m.eficiencia=efic;
+        m.tempoMedioMin=m.contTempos>0?Math.round(m.tempoMin/m.contTempos):0;
+        m.isVAN=isVAN;
+        // Score ponderado (VAN recebe fator 2.1x em volume/cubagem)
+        m.score=Math.round(
+          (pont*0.35) +                                    // 35% pontualidade
+          (Math.min(m.saidas,30)/30*100*0.25) +            // 25% saídas
+          (Math.min(m.recargas,10)/10*100*0.15) +          // 15% recargas
+          (Math.min(caixasAjustadas,15000)/15000*100*0.15) + // 15% volume (ajustado VAN)
+          (Math.min(efic,200)/200*100*0.10)                // 10% eficiência
+        );
+      });
+
+      lista.sort((a,b)=>b.score-a.score);
+      setDados(lista);
+    }catch(e){console.error(e)}
+    setLd(false);
+  }
+
+  const fmtTempo=(min)=>{if(!min)return'—';const h=Math.floor(min/60);const m=min%60;return`${h}h${String(m).padStart(2,'0')}m`};
+  const medalha=(i)=>i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+  const corScore=(s)=>s>=80?'var(--grn)':s>=60?'var(--yel)':'var(--red)';
+
+  return h('div',null,
+    h('div',{className:'sh'},
+      h('div',null,
+        h('h1',{className:'st'},'Ranking de ',h('span',null,'Incentivos')),
+        h('div',{className:'ss'},'Produtividade e pontualidade — atualizado diariamente')
+      )
+    ),
+
+    // FILTROS
+    h('div',{className:'fb'},
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Início'),h('input',{type:'date',value:ini,onChange:e=>setIni(e.target.value),style:{width:150}})),
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Fim'),h('input',{type:'date',value:fim,onChange:e=>setFim(e.target.value),style:{width:150}})),
+      h('div',{className:'fg2'},
+        h('label',{className:'lbl'},'Categoria'),
+        h('select',{value:tipo,onChange:e=>setTipo(e.target.value),style:{width:160}},
+          h('option',{value:'MOTORISTA'},'🚛 Motoristas'),
+          h('option',{value:'AJUDANTE'},'👷 Ajudantes')
+        )
+      )
+    ),
+
+    ld?h(Ldg):!dados||dados.length===0?h(Emp,{i:'🏆',t:'Sem dados no período'}):
+    h('div',null,
+
+      // TOP 3 destaque
+      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12,marginBottom:20}},
+        dados.slice(0,3).map((m,i)=>h('div',{key:m.nome,style:{
+          background:i===0?'linear-gradient(135deg,#1a1600,#2a2000)':
+                    i===1?'linear-gradient(135deg,#0d0d0d,#1a1a1a)':
+                    'linear-gradient(135deg,#0d0a00,#1a1200)',
+          border:`1px solid ${i===0?'#f5a62340':i===1?'#ffffff20':'#cd7f3240'}`,
+          borderRadius:12,padding:'18px 16px',textAlign:'center'
+        }},
+          h('div',{style:{fontSize:32,marginBottom:4}},medalha(i)),
+          h('div',{style:{fontSize:14,fontWeight:800,color:'var(--t1)',marginBottom:6}},m.nome.split(' ').slice(0,2).join(' ')),
+          h('div',{style:{fontSize:28,fontWeight:900,color:corScore(m.score),fontFamily:"'JetBrains Mono',monospace",marginBottom:8}},`${m.score}pts`),
+          h('div',{style:{display:'flex',justifyContent:'center',gap:8,flexWrap:'wrap',fontSize:10,color:'var(--t3)'}},
+            h('span',null,`${m.saidas} saídas`),
+            h('span',null,'·'),
+            h('span',null,`${fmt(m.caixas)} cx`),
+            h('span',null,'·'),
+            h('span',null,`${Math.round(m.pontMedia)}% pont.`)
+          )
+        ))
+      ),
+
+      // TABELA COMPLETA
+      h('div',{className:'card'},
+        h('div',{className:'ch'},
+          h('span',{className:'ct'},`🏅 Ranking Completo — ${tipo==='MOTORISTA'?'Motoristas':'Ajudantes'}`),
+          h('span',{style:{fontSize:11,color:'var(--t3)'}},`${dados.length} colaboradores`)
+        ),
+        h('div',{className:'tw'},
+          h('table',null,
+            h('thead',null,h('tr',null,
+              h('th',null,'#'),h('th',null,'Nome'),h('th',null,'VAN/VUC'),
+              h('th',null,'Saídas'),h('th',null,'Recargas'),
+              h('th',null,'Caixas'),h('th',null,'Cubos'),
+              h('th',null,'Tempo Médio'),h('th',null,'Cx/Hora'),
+              h('th',{style:{color:'var(--yel)'}},'Pontualidade'),
+              h('th',{style:{color:'var(--grn)'}},'SCORE')
+            )),
+            h('tbody',null,
+              dados.map((m,i)=>h('tr',{key:m.nome,style:i<3?{background:'var(--s2)'}:{}},
+                h('td',{style:{fontWeight:700,color:i===0?'#f5a623':i===1?'#aaa':i===2?'#cd7f32':'var(--t3)',fontSize:i<3?18:14}},
+                  medalha(i)||(i+1)),
+                h('td',{className:'b'},m.nome.split(' ').slice(0,3).join(' ')),
+                h('td',null,
+                  m.van>0?h('span',{className:'badge bb',style:{marginRight:3}},`VAN ${m.van}`):null,
+                  m.vuc>0?h('span',{className:'badge bg'},`VUC ${m.vuc}`):null
+                ),
+                h('td',{className:'m',style:{color:'var(--t1)',fontWeight:600}},m.saidas),
+                h('td',{className:'m'},m.recargas||'—'),
+                h('td',{className:'m'},fmt(m.caixas)),
+                h('td',{className:'m'},fmt(m.cubos,1)),
+                h('td',{className:'m'},fmtTempo(m.tempoMedioMin)),
+                h('td',{className:'m'},m.eficiencia?`${fmt(m.eficiencia,0)} cx/h`:'—'),
+                h('td',null,
+                  h('div',{style:{display:'flex',alignItems:'center',gap:6}},
+                    h('div',{style:{flex:1,height:6,background:'var(--s3)',borderRadius:3}},
+                      h('div',{style:{width:`${Math.min(m.pontMedia,100)}%`,height:'100%',
+                        background:corScore(m.pontMedia),borderRadius:3,transition:'width .3s'}})
+                    ),
+                    h('span',{style:{fontSize:10,color:corScore(m.pontMedia),fontWeight:700,minWidth:30}},
+                      `${Math.round(m.pontMedia)}%`)
+                  )
+                ),
+                h('td',null,
+                  h('div',{style:{
+                    background:corScore(m.score)+'20',
+                    border:`1px solid ${corScore(m.score)}40`,
+                    borderRadius:6,padding:'3px 10px',textAlign:'center',
+                    color:corScore(m.score),fontWeight:800,fontSize:14,
+                    fontFamily:"'JetBrains Mono',monospace"
+                  }},m.score)
+                )
+              ))
+            )
+          )
+        )
+      ),
+
+      // LEGENDA SCORE
+      h('div',{style:{background:'var(--sur)',border:'1px solid var(--b2)',borderRadius:'var(--r)',padding:'12px 16px',marginTop:14,fontSize:11,color:'var(--t3)'}},
+        h('div',{style:{fontWeight:700,marginBottom:6,color:'var(--t2)'}},
+          '📊 Como o SCORE é calculado:'),
+        h('div',{style:{display:'flex',gap:16,flexWrap:'wrap'}},
+          h('span',null,'🕐 Pontualidade: 35%'),
+          h('span',null,'📦 Saídas: 25%'),
+          h('span',null,'⟳ Recargas: 15%'),
+          h('span',null,'📦 Volume: 15%'),
+          h('span',null,'⚡ Eficiência: 10%')
+        ),
+        h('div',{style:{marginTop:6,color:'var(--t3)'}},
+          '⚖️ VUC recebe +20% no volume por carregar mais caixas por saída · Pontuação máxima: 100pts')
+      )
+    )
+  )
+}
+
+
+/* APP */
+
+/* DESPESAS / REEMBOLSO */
+function Despesas(){
+  const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);
+  const[modal,setModal]=useState(false);const[saving,setSaving]=useState(false);
+  const[ini,setIni]=useState(iso().substring(0,7)+'-01');
+  const[fim,setFim]=useState(iso());
+  const[motoristas,setMotoristas]=useState([]);
+  const[F,setF]=useState({data:iso(),num_transporte:'',rota:'',motorista_nome:'',categoria:'',descricao:'',valor:'',num_nf:'',status:'PENDENTE'});
+
+  useEffect(()=>{load();loadMotoristas()},[ini,fim]);
+
+  async function load(){
+    setLd(true);
+    try{
+      const d=await db.get('despesas',{},{order:'data.desc,created_at.desc'});
+      setRows(d.filter(r=>r.data>=ini&&r.data<=fim));
+    }catch(e){}
+    setLd(false);
+  }
+
+  async function loadMotoristas(){
+    try{
+      const d=await db.get('equipe',{status:'ATIVO'},{order:'nome.asc',select:'nome,funcao'});
+      setMotoristas(d);
+    }catch(e){}
+  }
+
+  async function salvar(){
+    if(!F.categoria){toast('Selecione a categoria','err');return}
+    if(!F.valor||parseFloat(F.valor)<=0){toast('Informe o valor','err');return}
+    setSaving(true);
+    try{
+      const payload={...F,valor:parseFloat(F.valor)||0,data:F.data||iso()};
+      if(F.id)await db.patch('despesas',F.id,payload);
+      else await db.post('despesas',payload);
+      toast('Despesa salva!');setModal(false);load();
+    }catch(e){toast('Erro: '+e.message,'err')}
+    setSaving(false);
+  }
+
+  async function marcarStatus(id,status){
+    try{await db.patch('despesas',id,{status});load();toast(status==='REEMBOLSADO'?'✅ Reembolsado!':'↩ Revertido');}catch(e){}
+  }
+
+  async function excluir(id){
+    if(!confirm('Excluir esta despesa?'))return;
+    try{await db.del('despesas',id);load();toast('Excluído!');}catch(e){}
+  }
+
+  function expExcel(){
+    if(!rows.length){toast('Sem dados','err');return}
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.json_to_sheet(rows.map(r=>({
+      'Data':fd(r.data),'Motorista':r.motorista_nome||'—','Nº Transporte':r.num_transporte||'—',
+      'Rota':r.rota||'—','Categoria':r.categoria,'Descrição':r.descricao||'—',
+      'Valor R$':parseFloat(r.valor||0).toFixed(2),'Nº NF':r.num_nf||'—','Status':r.status
+    })));
+    XLSX.utils.book_append_sheet(wb,ws,'Despesas');
+    XLSX.writeFile(wb,`Despesas_${ini}_${fim}.xlsx`);
+  }
+
+  function expPDF(){
+    if(!rows.length){toast('Sem dados','err');return}
+    const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape'});
+    doc.setFontSize(14);doc.text('Despesas / Reembolso — Transportadora',14,12);
+    doc.setFontSize(9);doc.text(`Período: ${fd(ini)} a ${fd(fim)}`,14,20);
+    const tot=rows.reduce((a,r)=>a+parseFloat(r.valor||0),0);
+    doc.text(`Total: R$ ${tot.toLocaleString('pt-BR',{minimumFractionDigits:2})}`,14,26);
+    const head=[['Data','Motorista','Categoria','Descrição','Valor','NF','Status']];
+    const body=rows.map(r=>[fd(r.data),r.motorista_nome||'—',r.categoria,r.descricao||'—',`R$${parseFloat(r.valor||0).toFixed(2)}`,r.num_nf||'—',r.status]);
+    doc.autoTable({head,body,startY:32,styles:{fontSize:8},headStyles:{fillColor:[232,25,90]}});
+    doc.save(`Despesas_${ini}_${fim}.pdf`);
+  }
+
+  const totPend=rows.filter(r=>r.status!=='REEMBOLSADO').reduce((a,r)=>a+parseFloat(r.valor||0),0);
+  const totPago=rows.filter(r=>r.status==='REEMBOLSADO').reduce((a,r)=>a+parseFloat(r.valor||0),0);
+  const totGeral=rows.reduce((a,r)=>a+parseFloat(r.valor||0),0);
+
+  const CATS=['Produto Danificado','Falta de Produto','Transporte / Uber','Locomoção / Mecânico','Outros'];
+
+  return h('div',null,
+    h('div',{className:'sh'},
+      h('div',null,h('h1',{className:'st'},'Despesas / ',h('span',null,'Reembolso')),h('div',{className:'ss'},'Registro de gastos operacionais para reembolso')),
+      h('div',{style:{display:'flex',gap:8}},
+        h('button',{className:'btn btn-o',onClick:expExcel},'⬇ Excel'),
+        h('button',{className:'btn btn-o',onClick:expPDF},'⬇ PDF'),
+        h('button',{className:'btn btn-r',onClick:()=>{setF({data:iso(),num_transporte:'',rota:'',motorista_nome:'',categoria:'',descricao:'',valor:'',num_nf:'',status:'PENDENTE'});setModal(true)}},'+ Registrar Despesa')
+      )
+    ),
+
+    h('div',{className:'kg'},
+      h('div',{className:'kc r'},h('div',{className:'kl'},'⏳ Pendente'),h('div',{className:'kv'},'R$ '+totPend.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})),h('div',{className:'ks'},rows.filter(r=>r.status!=='REEMBOLSADO').length+' registros')),
+      h('div',{className:'kc g'},h('div',{className:'kl'},'✅ Reembolsado'),h('div',{className:'kv'},'R$ '+totPago.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})),h('div',{className:'ks'},rows.filter(r=>r.status==='REEMBOLSADO').length+' registros')),
+      h('div',{className:'kc b'},h('div',{className:'kl'},'📊 Total Período'),h('div',{className:'kv'},'R$ '+totGeral.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})),h('div',{className:'ks'},rows.length+' lançamentos')),
+    ),
+
+    h('div',{className:'fb'},
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Início'),h('input',{type:'date',value:ini,onChange:e=>setIni(e.target.value),style:{width:150}})),
+      h('div',{className:'fg2'},h('label',{className:'lbl'},'Fim'),h('input',{type:'date',value:fim,onChange:e=>setFim(e.target.value),style:{width:150}})),
+      h('button',{onClick:load,style:{height:36,padding:'0 18px',background:'linear-gradient(135deg,#e8195a,#ff4d6d)',color:'#fff',border:'none',borderRadius:8,fontWeight:700,fontSize:13,cursor:'pointer',alignSelf:'flex-end'}},'🔍 BUSCAR')
+    ),
+
+    ld?h(Ldg):rows.length===0?h(Emp,{i:'💰',t:'Nenhuma despesa no período'}):
+    h('div',{className:'card'},
+      h('div',{className:'tw'},h('table',null,
+        h('thead',null,h('tr',null,
+          h('th',null,'Data'),h('th',null,'Motorista'),h('th',null,'Categoria'),
+          h('th',null,'Descrição'),h('th',null,'Valor'),h('th',null,'NF'),
+          h('th',null,'Status'),h('th',null,'')
+        )),
+        h('tbody',null,rows.map(r=>h('tr',{key:r.id},
+          h('td',{className:'m'},fd(r.data)),
+          h('td',{className:'b'},r.motorista_nome||'—'),
+          h('td',null,h('span',{className:'badge bb'},r.categoria)),
+          h('td',null,r.descricao||'—'),
+          h('td',{className:'m b',style:{color:'var(--grn)'}},`R$ ${parseFloat(r.valor||0).toFixed(2)}`),
+          h('td',{className:'m'},r.num_nf||'—'),
+          h('td',null,
+            r.status==='REEMBOLSADO'
+              ? h('span',{className:'badge bg'},'✅ Reembolsado')
+              : h('span',{className:'badge by'},'⏳ Pendente')
+          ),
+          h('td',null,h('div',{style:{display:'flex',gap:4}},
+            r.status!=='REEMBOLSADO'
+              ? h('button',{className:'btn btn-g btn-xs',onClick:()=>marcarStatus(r.id,'REEMBOLSADO')},'✅ Pago')
+              : h('button',{className:'btn btn-o btn-xs',onClick:()=>marcarStatus(r.id,'PENDENTE')},'↩'),
+            h('button',{className:'btn btn-o btn-xs',onClick:()=>{setF({...r});setModal(true)}},'✏️'),
+            h('button',{className:'btn btn-o btn-xs',style:{color:'var(--red)'},onClick:()=>excluir(r.id)},'✕')
+          ))
+        )))
+      ))
+    ),
+
+    modal&&h('div',{className:'ov',onClick:e=>e.target.className.includes('ov')&&setModal(false)},
+      h('div',{className:'mod'},
+        h('div',{className:'mh'},h('div',{className:'mt'},F.id?'Editar Despesa':'Nova Despesa'),h('button',{className:'btn btn-o btn-xs',onClick:()=>setModal(false)},'✕')),
+        h('div',{className:'mb'},
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Data'),h('input',{type:'date',value:F.data,onChange:e=>setF(f=>({...f,data:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Motorista'),h('select',{value:F.motorista_nome,onChange:e=>setF(f=>({...f,motorista_nome:e.target.value}))},h('option',{value:''},'— Selecionar —'),...motoristas.map(m=>h('option',{key:m.nome,value:m.nome},m.nome))))
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Nº Transporte'),h('input',{type:'text',value:F.num_transporte,onChange:e=>setF(f=>({...f,num_transporte:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Rota'),h('input',{type:'text',value:F.rota,onChange:e=>setF(f=>({...f,rota:e.target.value.toUpperCase()}))}))
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Categoria ★'),h('select',{value:F.categoria,onChange:e=>setF(f=>({...f,categoria:e.target.value}))},h('option',{value:''},'— Selecionar —'),...CATS.map(c=>h('option',{key:c,value:c},c)))),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Valor R$ ★'),h('input',{type:'number',step:'0.01',min:'0',placeholder:'0,00',value:F.valor,onChange:e=>setF(f=>({...f,valor:e.target.value}))}))
+          ),
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Descrição / Motivo'),h('textarea',{value:F.descricao,onChange:e=>setF(f=>({...f,descricao:e.target.value})),placeholder:'Ex: NF 12345 — produto avariado, cliente não aceitou...'})),
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Nº NF (opcional)'),h('input',{type:'text',value:F.num_nf,onChange:e=>setF(f=>({...f,num_nf:e.target.value}))})),
+        ),
+        h('div',{className:'mf'},
+          h('button',{className:'btn btn-o',onClick:()=>setModal(false)},'Cancelar'),
+          h('button',{className:'btn btn-r',onClick:salvar,disabled:saving},saving?'Salvando...':'✓ Salvar')
+        )
+      )
+    )
+  )
+}
+
+const PAGES={dashboard:Dashboard,entrada:EntradaDia,liberacoes:Liberacoes,descarga:Descarga,frota:Frota,equipe:Equipe,recargas:Recargas,ranking:Ranking,despesas:Despesas};
+const NAV=[{k:'dashboard',l:'Dashboard'},{k:'entrada',l:'Entrada do Dia'},{k:'liberacoes',l:'Liberações Diárias'},{k:'descarga',l:'Descarga FEMSA'},{k:'frota',l:'Frota'},{k:'equipe',l:'Equipe'},{k:'recargas',l:'Recargas'},{k:'ranking',l:'🏆 Ranking'},{k:'despesas',l:'💰 Despesas'}];
+
+function App(){
+  const[page,setPage]=useState('liberacoes');
+  const Page=PAGES[page];
+  return h('div',{className:'app'},
+    h('div',{className:'topbar'},
+      h('div',{className:'logo'},h('div',{className:'logo-icon'},'M'),h('div',null,h('div',{className:'logo-text'},'Transportadora'),h('div',{className:'logo-sub'},'Gestão Operacional'))),
+      h('div',{style:{fontSize:11,color:'var(--t3)',fontFamily:"'JetBrains Mono',monospace"}},dstr())
+    ),
+    h('div',{className:'nav'},NAV.map(({k,l})=>h('button',{key:k,className:`nav-btn${page===k?' on':''}`,onClick:()=>setPage(k)},l))),
+    h('div',{className:'main'},h(Page,{key:page}))
+  )
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
+<div style="position:fixed;bottom:20px;right:20px;background:#e8195a;color:#fff;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none">MODO DEMO</div></body>
+</html>
