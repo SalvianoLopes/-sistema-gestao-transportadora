@@ -252,8 +252,9 @@ function Liberacoes(){
       'Rota':r.rota||'—','Tipo Saída':r.status_operacional||'—',
       'Saída':fmtT(r.horario_saida),'Chegada':fmtT(r.horario_chegada),'Tempo na Rua':calcTempo(r.horario_saida,r.horario_chegada),
       'Caixas':r.qtd_caixas||0,'Clientes':r.num_clientes||0,'KM':r.km||0,
-      'Recarga Manual':r.valor_recarga_manual?'R$ '+parseFloat(r.valor_recarga_manual).toFixed(2):'',
-      'Indicador':r.status_operacional==='Recarga'?(r.valor_recarga_manual?'MANUAL':'PADRÃO'):''
+      'Mot. Manual':r.valor_recarga_manual_motorista?'R$ '+parseFloat(r.valor_recarga_manual_motorista).toFixed(2):'',
+      'Aj. Manual':r.valor_recarga_manual_ajudante?'R$ '+parseFloat(r.valor_recarga_manual_ajudante).toFixed(2):'',
+      'Indicador':r.status_operacional==='Recarga'?((r.valor_recarga_manual_motorista||r.valor_recarga_manual_ajudante)?'MANUAL':'PADRÃO'):''
     })));
     ws['!cols']=[{wch:12},{wch:10},{wch:6},{wch:18},{wch:30},{wch:30},{wch:30},{wch:14},{wch:14},{wch:10},{wch:10},{wch:10},{wch:8},{wch:8},{wch:6},{wch:16},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws,'Horários');
@@ -377,7 +378,8 @@ h('td',{className:'m',style:{fontSize:10}},
   s.status_operacional==='Recarga'
     ?h('div',{style:{display:'flex',flexDirection:'column',gap:2,alignItems:'flex-start'}},
         h('span',{className:'badge br',style:{fontSize:9,padding:'1px 6px'}},'⟳ REC'),
-        s.valor_recarga_manual&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 5px'}},'★ R$'+parseFloat(s.valor_recarga_manual).toFixed(0)+' MAN.')
+        s.valor_recarga_manual_motorista&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 5px'}},'🚛 R$'+parseFloat(s.valor_recarga_manual_motorista).toFixed(0)),
+        s.valor_recarga_manual_ajudante&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 5px'}},'👷 R$'+parseFloat(s.valor_recarga_manual_ajudante).toFixed(0))
       )
     :h('span',{style:{color:'var(--grn)'}},s.venda_total_dia?R(s.venda_total_dia):'—')
 ),
@@ -407,7 +409,7 @@ function EntradaDia(){
     motorista_nome:'',ajudante1_nome:'',ajudante2_nome:'',
     qtd_caixas:'',num_clientes:'',cubos:'',km:'',total_venda:'',cte:'',
     horario_saida:'',horario_chegada:'',
-    venda_total_dia:'',valor_recarga_manual:'',
+    venda_total_dia:'',valor_recarga_manual_motorista:'',valor_recarga_manual_ajudante:'',
     status_operacional:'1ª Saída'};
   const[F,setF]=useState(emptyF);
 
@@ -454,8 +456,9 @@ function EntradaDia(){
       'Venda R$':r.status_operacional==='1ª Saída'?(r.venda_total_dia||0):0,
       'CTE':r.cte||'—','Horário Saída':r.horario_saida||'—','Horário Chegada':r.horario_chegada||'—',
       'Observações':r.observacoes||'—','Nº PE':r.num_pe||'—','Motivo PE':r.motivo_pe||'—',
-      'Recarga Manual':r.valor_recarga_manual?'R$ '+parseFloat(r.valor_recarga_manual).toFixed(2):'',
-      'Indicador':r.status_operacional==='Recarga'?(r.valor_recarga_manual?'MANUAL':'PADRÃO'):''
+      'Mot. Manual':r.valor_recarga_manual_motorista?'R$ '+parseFloat(r.valor_recarga_manual_motorista).toFixed(2):'',
+      'Aj. Manual':r.valor_recarga_manual_ajudante?'R$ '+parseFloat(r.valor_recarga_manual_ajudante).toFixed(2):'',
+      'Indicador':r.status_operacional==='Recarga'?((r.valor_recarga_manual_motorista||r.valor_recarga_manual_ajudante)?'MANUAL':'PADRÃO'):''
     })));
     XLSX.utils.book_append_sheet(wb,ws,'Entrada do Dia');
     XLSX.writeFile(wb,`Entrada_${dt}.xlsx`);
@@ -569,7 +572,8 @@ function EntradaDia(){
       horario_saida:row.horario_saida||'',
       horario_chegada:row.horario_chegada||'',
       status_operacional:row.status_operacional||'1ª Saída',
-      valor_recarga_manual:row.valor_recarga_manual||'',
+      valor_recarga_manual_motorista:row.valor_recarga_manual_motorista||'',
+      valor_recarga_manual_ajudante:row.valor_recarga_manual_ajudante||'',
     });
     setModal(true);
   }
@@ -656,7 +660,8 @@ function EntradaDia(){
             venda_total_dia:venda,
             cte:iCte>=0?String(r[iCte]||'').trim():'',
             status_operacional:statusOk,
-            valor_recarga_manual:null,
+            valor_recarga_manual_motorista:null,
+            valor_recarga_manual_ajudante:null,
             valor_motorista:ir?(tipo==='VAN'||tv[placa]==='VAN'?50:70):0,
             valor_ajudante1:ir&&aj1?(tipo==='VAN'||tv[placa]==='VAN'?50:60):0,
             valor_ajudante2:ir&&aj2?(tipo==='VAN'||tv[placa]==='VAN'?50:60):0,
@@ -675,7 +680,8 @@ function EntradaDia(){
     if(!F.placa||!F.motorista_nome){toast('Placa e motorista obrigatórios','err');return}
     if(F.status_operacional==='PE'&&!F.num_pe){toast('Nº da PE é obrigatório','err');return}
     if(F.status_operacional==='PE'&&!F.motivo_pe){toast('Motivo da PE é obrigatório','err');return}
-    if(F.status_operacional==='Recarga'&&F.valor_recarga_manual&&parseFloat(F.valor_recarga_manual)<=0){toast('Valor manual deve ser maior que zero','err');return}
+    if(F.status_operacional==='Recarga'&&F.valor_recarga_manual_motorista&&parseFloat(F.valor_recarga_manual_motorista)<=0){toast('Valor manual do motorista deve ser maior que zero','err');return}
+    if(F.status_operacional==='Recarga'&&F.valor_recarga_manual_ajudante&&parseFloat(F.valor_recarga_manual_ajudante)<=0){toast('Valor manual do ajudante deve ser maior que zero','err');return}
     setSaving(true);
     const tv2=fr.find(f=>f.placa===F.placa)?.tipo||'';
     const ir=F.status_operacional==='Recarga';
@@ -698,10 +704,11 @@ function EntradaDia(){
         const d=(hc*60+mc)-(hs*60+ms);
         return d>0?d:null;
       })(),
-      valor_recarga_manual:ir&&parseFloat(F.valor_recarga_manual)>0?parseFloat(F.valor_recarga_manual):null,
-      valor_motorista:ir?(parseFloat(F.valor_recarga_manual)>0?parseFloat(F.valor_recarga_manual):(tv2==='VAN'?50:70)):0,
-      valor_ajudante1:ir&&F.ajudante1_nome?(parseFloat(F.valor_recarga_manual)>0?parseFloat(F.valor_recarga_manual):(tv2==='VAN'?50:60)):0,
-      valor_ajudante2:ir&&F.ajudante2_nome?(parseFloat(F.valor_recarga_manual)>0?parseFloat(F.valor_recarga_manual):(tv2==='VAN'?50:60)):0,
+      valor_recarga_manual_motorista:ir&&parseFloat(F.valor_recarga_manual_motorista)>0?parseFloat(F.valor_recarga_manual_motorista):null,
+      valor_recarga_manual_ajudante:ir&&parseFloat(F.valor_recarga_manual_ajudante)>0?parseFloat(F.valor_recarga_manual_ajudante):null,
+      valor_motorista:ir?(parseFloat(F.valor_recarga_manual_motorista)>0?parseFloat(F.valor_recarga_manual_motorista):(tv2==='VAN'?50:70)):0,
+      valor_ajudante1:ir&&F.ajudante1_nome?(parseFloat(F.valor_recarga_manual_ajudante)>0?parseFloat(F.valor_recarga_manual_ajudante):(tv2==='VAN'?50:60)):0,
+      valor_ajudante2:ir&&F.ajudante2_nome?(parseFloat(F.valor_recarga_manual_ajudante)>0?parseFloat(F.valor_recarga_manual_ajudante):(tv2==='VAN'?50:60)):0,
     };
     try{
       if(editId){
@@ -879,7 +886,8 @@ function EntradaDia(){
           s.status_operacional==='Recarga'
             ?h('div',{style:{display:'flex',flexDirection:'column',gap:2,alignItems:'flex-start'}},
                 h('span',{className:'badge br',style:{fontSize:9,padding:'1px 6px'}},'⟳ REC'),
-                s.valor_recarga_manual&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 5px'}},'★ R$'+parseFloat(s.valor_recarga_manual).toFixed(0)+' MAN.')
+                s.valor_recarga_manual_motorista&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 5px'}},'🚛 R$'+parseFloat(s.valor_recarga_manual_motorista).toFixed(0)),
+                s.valor_recarga_manual_ajudante&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 5px'}},'👷 R$'+parseFloat(s.valor_recarga_manual_ajudante).toFixed(0))
               )
             :h('span',{style:{color:'var(--grn)',fontSize:10}},s.venda_total_dia?R(s.venda_total_dia):'—')
         ),
@@ -896,7 +904,8 @@ function EntradaDia(){
           s.status_operacional==='Recarga'
             ?h('div',{style:{display:'flex',flexDirection:'column',gap:2,alignItems:'flex-start'}},
                 h('span',{style:{color:'var(--grn)',fontFamily:"'JetBrains Mono',monospace",fontSize:11}},R((s.valor_motorista||0)+(s.valor_ajudante1||0)+(s.valor_ajudante2||0))),
-                s.valor_recarga_manual&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 6px'}},'★ MANUAL R$'+parseFloat(s.valor_recarga_manual).toFixed(2))
+                s.valor_recarga_manual_motorista&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 6px'}},'🚛 Mot R$'+parseFloat(s.valor_recarga_manual_motorista).toFixed(0)),
+                s.valor_recarga_manual_ajudante&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 6px'}},'👷 Aj R$'+parseFloat(s.valor_recarga_manual_ajudante).toFixed(0))
               )
             :'—'),
       )))
@@ -957,22 +966,39 @@ function EntradaDia(){
               h('div',null,
                 h('div',{style:{fontWeight:700,marginBottom:3}},'💰 Valores Padrão de Recarga'),
                 h('div',{style:{fontSize:11}},
-                  (()=>{const t=fr.find(f=>f.placa===F.placa)?.tipo||'VAN';return t==='VUC'?'VUC → Motorista R$70 | Ajudante R$60':'VAN → Motorista R$50 | Ajudante R$50'})(),
+                  (()=>{const t=fr.find(f=>f.placa===F.placa)?.tipo||'VAN';return t==='VUC'?'VUC → Motorista R$70 | Ajudante R$60':'VAN → Motorista R$50 | Ajudante R$60'})(),
                   ' — deixe em branco para usar o padrão'
                 )
               )
             ),
-            h('div',{className:'fg'},
-              h('label',{className:'lbl'},'Recarga Manual (R$) — sobrescreve o padrão'),
-              h('input',{
-                type:'number',step:'0.01',min:'0.01',
-                placeholder:'Ex: 80,00 — aplica a todos os colaboradores',
-                value:F.valor_recarga_manual||'',
-                onChange:e=>setF(f=>({...f,valor_recarga_manual:e.target.value})),
-                style:{borderColor:F.valor_recarga_manual&&parseFloat(F.valor_recarga_manual)>0?'#f5a623':undefined,fontFamily:"'JetBrains Mono',monospace",fontSize:15,fontWeight:700}
-              }),
-              F.valor_recarga_manual&&parseFloat(F.valor_recarga_manual)>0&&h('div',{style:{marginTop:5,fontSize:11,color:'var(--yel)',display:'flex',alignItems:'center',gap:5}},
-                '⚠ Valor manual R$ ',h('strong',null,parseFloat(F.valor_recarga_manual).toFixed(2)),' aplicado a todos os colaboradores desta saída'
+            h('div',{className:'r2'},
+              h('div',{className:'fg'},
+                h('label',{className:'lbl'},'🚛 Motorista — Valor Manual (R$)'),
+                h('input',{
+                  type:'number',step:'0.01',min:'0.01',
+                  placeholder:(()=>{const t=fr.find(f=>f.placa===F.placa)?.tipo||'VAN';return 'Padrão: R$ '+(t==='VUC'?'70':'50')})(),
+                  value:F.valor_recarga_manual_motorista||'',
+                  onChange:e=>setF(f=>({...f,valor_recarga_manual_motorista:e.target.value})),
+                  style:{borderColor:F.valor_recarga_manual_motorista&&parseFloat(F.valor_recarga_manual_motorista)>0?'#f5a623':undefined,fontFamily:"'JetBrains Mono',monospace",fontSize:15,fontWeight:700}
+                }),
+                F.valor_recarga_manual_motorista&&parseFloat(F.valor_recarga_manual_motorista)>0&&
+                  h('div',{style:{marginTop:4,fontSize:11,color:'var(--yel)'}},
+                    '★ R$ ',h('strong',null,parseFloat(F.valor_recarga_manual_motorista).toFixed(2)),' (manual)'
+                  )
+              ),
+              h('div',{className:'fg'},
+                h('label',{className:'lbl'},'👷 Ajudante — Valor Manual (R$)'),
+                h('input',{
+                  type:'number',step:'0.01',min:'0.01',
+                  placeholder:(()=>{const t=fr.find(f=>f.placa===F.placa)?.tipo||'VAN';return 'Padrão: R$ '+(t==='VUC'?'60':'50')})(),
+                  value:F.valor_recarga_manual_ajudante||'',
+                  onChange:e=>setF(f=>({...f,valor_recarga_manual_ajudante:e.target.value})),
+                  style:{borderColor:F.valor_recarga_manual_ajudante&&parseFloat(F.valor_recarga_manual_ajudante)>0?'#f5a623':undefined,fontFamily:"'JetBrains Mono',monospace",fontSize:15,fontWeight:700}
+                }),
+                F.valor_recarga_manual_ajudante&&parseFloat(F.valor_recarga_manual_ajudante)>0&&
+                  h('div',{style:{marginTop:4,fontSize:11,color:'var(--yel)'}},
+                    '★ R$ ',h('strong',null,parseFloat(F.valor_recarga_manual_ajudante).toFixed(2)),' (manual)'
+                  )
               )
             )
           ),
@@ -1304,8 +1330,9 @@ function Recargas(){
             'Hor. Saída':fmtT(r.horario_saida),'Hor. Chegada':fmtT(r.horario_chegada),
             'Tempo':calcTempo(r.horario_saida,r.horario_chegada),
             'Valor Recarga':r.valor.toFixed(2),
-            'Vl. Manual':r.valor_recarga_manual?'R$ '+parseFloat(r.valor_recarga_manual).toFixed(2):'',
-            'Indicador':r.valor_recarga_manual?'★ MANUAL':'PADRÃO',
+            'Mot. Manual':r.valor_recarga_manual_motorista?'R$ '+parseFloat(r.valor_recarga_manual_motorista).toFixed(2):'',
+            'Aj. Manual':r.valor_recarga_manual_ajudante?'R$ '+parseFloat(r.valor_recarga_manual_ajudante).toFixed(2):'',
+            'Indicador':(r.valor_recarga_manual_motorista||r.valor_recarga_manual_ajudante)?'★ MANUAL':'PADRÃO',
           });
         });
       });
@@ -1430,7 +1457,7 @@ function Recargas(){
 
         allR.forEach(function(item,idx){
           if(y>193){doc.addPage();y=15;}
-          var isManual=item.isRec&&item.r.valor_recarga_manual&&parseFloat(item.r.valor_recarga_manual)>0;
+          var isManual=item.isRec&&(parseFloat(item.r.valor_recarga_manual_motorista||0)>0||parseFloat(item.r.valor_recarga_manual_ajudante||0)>0);
           if(isManual){
             doc.setFillColor(255,243,200);doc.rect(8,y-3,pW-16,6,'F');
           }else if(idx%2===0){
@@ -2649,5 +2676,5 @@ function App(){
 
 ReactDOM.createRoot(document.getElementById('root')).render(h(App));
 </script>
-<div style="position:fixed;bottom:20px;right:20px;background:#e8195a;color:#fff;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none">MODO DEMO</div></body>
+</body>
 </html>
