@@ -2676,5 +2676,15 @@ function App(){
 
 ReactDOM.createRoot(document.getElementById('root')).render(h(App));
 </script>
+<script>
+(function(){
+  if(window.location.hostname!=='murici-ipiranga.vercel.app'){
+    var d=document.createElement('div');
+    d.style.cssText='position:fixed;bottom:20px;right:20px;background:#e8195a;color:#fff;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none';
+    d.textContent='MODO DEMO';
+    document.body.appendChild(d);
+  }
+})();
+</script>
 </body>
 </html>
