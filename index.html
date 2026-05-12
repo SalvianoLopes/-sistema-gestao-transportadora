@@ -251,8 +251,11 @@ function Liberacoes(){
       'Motorista':r.motorista_nome||'—','Ajudante 1':r.ajudante1_nome||'—','Ajudante 2':r.ajudante2_nome||'—',
       'Rota':r.rota||'—','Tipo Saída':r.status_operacional||'—',
       'Saída':fmtT(r.horario_saida),'Chegada':fmtT(r.horario_chegada),'Tempo na Rua':calcTempo(r.horario_saida,r.horario_chegada),
-      'Caixas':r.qtd_caixas||0,'Clientes':r.num_clientes||0,'KM':r.km||0
+      'Caixas':r.qtd_caixas||0,'Clientes':r.num_clientes||0,'KM':r.km||0,
+      'Recarga Manual':r.valor_recarga_manual?'R$ '+parseFloat(r.valor_recarga_manual).toFixed(2):'',
+      'Indicador':r.status_operacional==='Recarga'?(r.valor_recarga_manual?'MANUAL':'PADRÃO'):''
     })));
+    ws['!cols']=[{wch:12},{wch:10},{wch:6},{wch:18},{wch:30},{wch:30},{wch:30},{wch:14},{wch:14},{wch:10},{wch:10},{wch:10},{wch:8},{wch:8},{wch:6},{wch:16},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws,'Horários');
     XLSX.writeFile(wb,`Horarios_${dt}.xlsx`);
     toast('Excel exportado!');
@@ -369,7 +372,15 @@ function Liberacoes(){
         h('td',null,h(Ob,{o:s.onda})),h('td',{className:'b m'},s.placa||'—'),h('td',null,s.tipo_veiculo?h(Bs,{s:s.tipo_veiculo}):'—'),
         h('td',{className:'b'},s.motorista_nome||'—'),h('td',null,s.ajudante1_nome||'—'),h('td',null,s.ajudante2_nome||'—'),
         h('td',{className:'m'},s.num_transporte||'—'),h('td',{className:'m'},s.rota||'—'),
-        h('td',{className:'m'},fmt(s.qtd_caixas)),h('td',{className:'m'},fmt(s.num_clientes)),h('td',{className:'m'},fmt(s.km)),h('td',{className:'m',style:{color:'var(--yel)'}},fmt(s.cubos,2)),h('td',{className:'m',style:{color:'var(--grn)',fontSize:10}},s.status_operacional==='Recarga'?h('span',{className:'badge br',style:{fontSize:9,padding:'1px 6px'}},'⟳ REC'):s.venda_total_dia?R(s.venda_total_dia):'—'),
+        h('td',{className:'m'},fmt(s.qtd_caixas)),h('td',{className:'m'},fmt(s.num_clientes)),h('td',{className:'m'},fmt(s.km)),h('td',{className:'m',style:{color:'var(--yel)'}},fmt(s.cubos,2)),
+h('td',{className:'m',style:{fontSize:10}},
+  s.status_operacional==='Recarga'
+    ?h('div',{style:{display:'flex',flexDirection:'column',gap:2,alignItems:'flex-start'}},
+        h('span',{className:'badge br',style:{fontSize:9,padding:'1px 6px'}},'⟳ REC'),
+        s.valor_recarga_manual&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 5px'}},'★ R$'+parseFloat(s.valor_recarga_manual).toFixed(0)+' MAN.')
+      )
+    :h('span',{style:{color:'var(--grn)'}},s.venda_total_dia?R(s.venda_total_dia):'—')
+),
       )))
     )))
   )
@@ -396,7 +407,7 @@ function EntradaDia(){
     motorista_nome:'',ajudante1_nome:'',ajudante2_nome:'',
     qtd_caixas:'',num_clientes:'',cubos:'',km:'',total_venda:'',cte:'',
     horario_saida:'',horario_chegada:'',
-    venda_total_dia:'',
+    venda_total_dia:'',valor_recarga_manual:'',
     status_operacional:'1ª Saída'};
   const[F,setF]=useState(emptyF);
 
@@ -442,7 +453,9 @@ function EntradaDia(){
       'Caixas':r.qtd_caixas||0,'Clientes':r.num_clientes||0,'KM':r.km||0,'Cubagem m³':r.cubos||0,
       'Venda R$':r.status_operacional==='1ª Saída'?(r.venda_total_dia||0):0,
       'CTE':r.cte||'—','Horário Saída':r.horario_saida||'—','Horário Chegada':r.horario_chegada||'—',
-      'Observações':r.observacoes||'—','Nº PE':r.num_pe||'—','Motivo PE':r.motivo_pe||'—'
+      'Observações':r.observacoes||'—','Nº PE':r.num_pe||'—','Motivo PE':r.motivo_pe||'—',
+      'Recarga Manual':r.valor_recarga_manual?'R$ '+parseFloat(r.valor_recarga_manual).toFixed(2):'',
+      'Indicador':r.status_operacional==='Recarga'?(r.valor_recarga_manual?'MANUAL':'PADRÃO'):''
     })));
     XLSX.utils.book_append_sheet(wb,ws,'Entrada do Dia');
     XLSX.writeFile(wb,`Entrada_${dt}.xlsx`);
@@ -556,6 +569,7 @@ function EntradaDia(){
       horario_saida:row.horario_saida||'',
       horario_chegada:row.horario_chegada||'',
       status_operacional:row.status_operacional||'1ª Saída',
+      valor_recarga_manual:row.valor_recarga_manual||'',
     });
     setModal(true);
   }
@@ -642,6 +656,7 @@ function EntradaDia(){
             venda_total_dia:venda,
             cte:iCte>=0?String(r[iCte]||'').trim():'',
             status_operacional:statusOk,
+            valor_recarga_manual:null,
             valor_motorista:ir?(tipo==='VAN'||tv[placa]==='VAN'?50:70):0,
             valor_ajudante1:ir&&aj1?(tipo==='VAN'||tv[placa]==='VAN'?50:60):0,
             valor_ajudante2:ir&&aj2?(tipo==='VAN'||tv[placa]==='VAN'?50:60):0,
@@ -660,6 +675,7 @@ function EntradaDia(){
     if(!F.placa||!F.motorista_nome){toast('Placa e motorista obrigatórios','err');return}
     if(F.status_operacional==='PE'&&!F.num_pe){toast('Nº da PE é obrigatório','err');return}
     if(F.status_operacional==='PE'&&!F.motivo_pe){toast('Motivo da PE é obrigatório','err');return}
+    if(F.status_operacional==='Recarga'&&F.valor_recarga_manual&&parseFloat(F.valor_recarga_manual)<=0){toast('Valor manual deve ser maior que zero','err');return}
     setSaving(true);
     const tv2=fr.find(f=>f.placa===F.placa)?.tipo||'';
     const ir=F.status_operacional==='Recarga';
@@ -682,9 +698,10 @@ function EntradaDia(){
         const d=(hc*60+mc)-(hs*60+ms);
         return d>0?d:null;
       })(),
-      valor_motorista:ir?(tv2==='VAN'?50:70):0,
-      valor_ajudante1:ir&&F.ajudante1_nome?(tv2==='VAN'?50:60):0,
-      valor_ajudante2:ir&&F.ajudante2_nome?(tv2==='VAN'?50:60):0,
+      valor_recarga_manual:ir&&parseFloat(F.valor_recarga_manual)>0?parseFloat(F.valor_recarga_manual):null,
+      valor_motorista:ir?(parseFloat(F.valor_recarga_manual)>0?parseFloat(F.valor_recarga_manual):(tv2==='VAN'?50:70)):0,
+      valor_ajudante1:ir&&F.ajudante1_nome?(parseFloat(F.valor_recarga_manual)>0?parseFloat(F.valor_recarga_manual):(tv2==='VAN'?50:60)):0,
+      valor_ajudante2:ir&&F.ajudante2_nome?(parseFloat(F.valor_recarga_manual)>0?parseFloat(F.valor_recarga_manual):(tv2==='VAN'?50:60)):0,
     };
     try{
       if(editId){
@@ -858,7 +875,14 @@ function EntradaDia(){
         h('td',{className:'m'},s.rota||'—'),
         h('td',{className:'m'},fmt(s.qtd_caixas)),
         h('td',{className:'m',style:{color:'var(--yel)'}},fmt(s.cubos||0,2)),
-        h('td',{className:'m',style:{color:'var(--grn)',fontSize:10}},s.status_operacional==='Recarga'?h('span',{className:'badge br',style:{fontSize:9,padding:'1px 6px'}},'⟳ REC'):s.venda_total_dia?R(s.venda_total_dia):'—'),
+        h('td',{className:'m',style:{fontSize:10}},
+          s.status_operacional==='Recarga'
+            ?h('div',{style:{display:'flex',flexDirection:'column',gap:2,alignItems:'flex-start'}},
+                h('span',{className:'badge br',style:{fontSize:9,padding:'1px 6px'}},'⟳ REC'),
+                s.valor_recarga_manual&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 5px'}},'★ R$'+parseFloat(s.valor_recarga_manual).toFixed(0)+' MAN.')
+              )
+            :h('span',{style:{color:'var(--grn)',fontSize:10}},s.venda_total_dia?R(s.venda_total_dia):'—')
+        ),
         h('td',{className:'m'},fmt(s.km)),
         h('td',{className:'m',style:{color:'var(--blu)',fontFamily:"'JetBrains Mono',monospace"}},s.horario_saida||'—'),
         h('td',{className:'m',style:{color:s.horario_chegada?'var(--grn)':'var(--yel)',fontFamily:"'JetBrains Mono',monospace"}},
@@ -868,8 +892,13 @@ function EntradaDia(){
           s.tempo_trabalhado_min?(()=>{const h2=Math.floor(s.tempo_trabalhado_min/60);const m2=s.tempo_trabalhado_min%60;return `${h2}h${String(m2).padStart(2,'0')}m`})():'—'
         ),
         h('td',null,h(Bs,{s:s.status_operacional})),
-        h('td',{className:'m',style:{color:'var(--grn)'}},
-          s.status_operacional==='Recarga'?R((s.valor_motorista||0)+(s.valor_ajudante1||0)+(s.valor_ajudante2||0)):'—'),
+        h('td',{className:'m'},
+          s.status_operacional==='Recarga'
+            ?h('div',{style:{display:'flex',flexDirection:'column',gap:2,alignItems:'flex-start'}},
+                h('span',{style:{color:'var(--grn)',fontFamily:"'JetBrains Mono',monospace",fontSize:11}},R((s.valor_motorista||0)+(s.valor_ajudante1||0)+(s.valor_ajudante2||0))),
+                s.valor_recarga_manual&&h('span',{className:'badge by',style:{fontSize:8,padding:'1px 6px'}},'★ MANUAL R$'+parseFloat(s.valor_recarga_manual).toFixed(2))
+              )
+            :'—'),
       )))
     ))),
 
@@ -922,6 +951,30 @@ function EntradaDia(){
               h('option',{value:'Recarga'},'⟳ Recarga'),
               h('option',{value:'PE'},'📋 PE — Processo Específico')
             ))
+          ),
+          F.status_operacional==='Recarga'&&h('div',{style:{marginBottom:13}},
+            h('div',{className:'al al-y',style:{marginBottom:8}},
+              h('div',null,
+                h('div',{style:{fontWeight:700,marginBottom:3}},'💰 Valores Padrão de Recarga'),
+                h('div',{style:{fontSize:11}},
+                  (()=>{const t=fr.find(f=>f.placa===F.placa)?.tipo||'VAN';return t==='VUC'?'VUC → Motorista R$70 | Ajudante R$60':'VAN → Motorista R$50 | Ajudante R$50'})(),
+                  ' — deixe em branco para usar o padrão'
+                )
+              )
+            ),
+            h('div',{className:'fg'},
+              h('label',{className:'lbl'},'Recarga Manual (R$) — sobrescreve o padrão'),
+              h('input',{
+                type:'number',step:'0.01',min:'0.01',
+                placeholder:'Ex: 80,00 — aplica a todos os colaboradores',
+                value:F.valor_recarga_manual||'',
+                onChange:e=>setF(f=>({...f,valor_recarga_manual:e.target.value})),
+                style:{borderColor:F.valor_recarga_manual&&parseFloat(F.valor_recarga_manual)>0?'#f5a623':undefined,fontFamily:"'JetBrains Mono',monospace",fontSize:15,fontWeight:700}
+              }),
+              F.valor_recarga_manual&&parseFloat(F.valor_recarga_manual)>0&&h('div',{style:{marginTop:5,fontSize:11,color:'var(--yel)',display:'flex',alignItems:'center',gap:5}},
+                '⚠ Valor manual R$ ',h('strong',null,parseFloat(F.valor_recarga_manual).toFixed(2)),' aplicado a todos os colaboradores desta saída'
+              )
+            )
           ),
           h('div',{className:'r2'},
             h('div',{className:'fg'},h('label',{className:'lbl'},'Nº Transporte'),h('input',{type:'number',value:F.num_transporte,onChange:e=>setF(f=>({...f,num_transporte:e.target.value}))})),
@@ -1251,6 +1304,8 @@ function Recargas(){
             'Hor. Saída':fmtT(r.horario_saida),'Hor. Chegada':fmtT(r.horario_chegada),
             'Tempo':calcTempo(r.horario_saida,r.horario_chegada),
             'Valor Recarga':r.valor.toFixed(2),
+            'Vl. Manual':r.valor_recarga_manual?'R$ '+parseFloat(r.valor_recarga_manual).toFixed(2):'',
+            'Indicador':r.valor_recarga_manual?'★ MANUAL':'PADRÃO',
           });
         });
       });
@@ -1258,7 +1313,7 @@ function Recargas(){
     });
 
     const ws=XLSX.utils.json_to_sheet(linhas);
-    ws['!cols']=[{wch:10},{wch:32},{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:8},{wch:8},{wch:10},{wch:6},{wch:10},{wch:12},{wch:10},{wch:14}];
+    ws['!cols']=[{wch:10},{wch:32},{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:8},{wch:8},{wch:10},{wch:6},{wch:10},{wch:12},{wch:10},{wch:14},{wch:14},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws,'Timeline Recargas');
 
     // Aba resumo
@@ -1375,10 +1430,15 @@ function Recargas(){
 
         allR.forEach(function(item,idx){
           if(y>193){doc.addPage();y=15;}
-          if(idx%2===0){doc.setFillColor(252,253,255);doc.rect(8,y-3,pW-16,6,'F');}
+          var isManual=item.isRec&&item.r.valor_recarga_manual&&parseFloat(item.r.valor_recarga_manual)>0;
+          if(isManual){
+            doc.setFillColor(255,243,200);doc.rect(8,y-3,pW-16,6,'F');
+          }else if(idx%2===0){
+            doc.setFillColor(252,253,255);doc.rect(8,y-3,pW-16,6,'F');
+          }
           doc.setFont('helvetica','bold');doc.setFontSize(6.5);
           doc.setTextColor(...(item.isRec?corR:corA));
-          doc.text(item.tipo,cx[0],y);
+          doc.text(item.tipo+(isManual?' [MAN]':''),cx[0],y);
           doc.setFont('helvetica','normal');doc.setTextColor(...corB);
           doc.text(s(fd(item.r.data)),cx[1],y);
           doc.text(s(item.r.num_transporte),cx[2],y);
@@ -1390,8 +1450,9 @@ function Recargas(){
           doc.text(s(fmtT(item.r.horario_chegada)),cx[8],y);
           doc.text(s(calcTempo(item.r.horario_saida,item.r.horario_chegada)),cx[9],y);
           if(item.valor!=null){
-            doc.setFont('helvetica','bold');doc.setTextColor(...corG);
-            doc.text('R$'+s(fmt(item.valor,0)),cx[10],y);
+            doc.setFont('helvetica','bold');
+            doc.setTextColor(...(isManual?[200,130,0]:corG));
+            doc.text('R$'+s(fmt(item.valor,0))+(isManual?' *':''),cx[10],y);
           }
           y+=6;
         });
@@ -1409,6 +1470,13 @@ function Recargas(){
         doc.text('Pag '+p+' / '+totalPags,pW-18,pH-2);
       }
 
+      // Legenda [MAN] em todas as páginas
+      for(var p2=1;p2<=totalPags;p2++){
+        doc.setPage(p2);
+        doc.setFillColor(255,243,200);doc.rect(8,pH-14,60,7,'F');
+        doc.setFontSize(6);doc.setFont('helvetica','bold');doc.setTextColor(160,100,0);
+        doc.text('[MAN] = Recarga com valor manual (sobrescreve padrao VAN/VUC)',10,pH-9);
+      }
       doc.save('Recargas_'+s(ini)+'_'+s(fim)+'.pdf');
       toast('PDF gerado - '+colaboradores.length+' colab., '+totalPags+' pag.!');
     }catch(err){
