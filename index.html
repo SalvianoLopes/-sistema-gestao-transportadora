@@ -1163,8 +1163,9 @@ function Escala(){
       'Nº Transporte':r.num_transp||'','Rota':r.rota||''
     })));
     ws['!cols']=[{wch:12},{wch:10},{wch:6},{wch:32},{wch:16},{wch:32},{wch:16},{wch:32},{wch:16},{wch:14},{wch:10}];
-    XLSX.utils.book_append_sheet(wb,ws,`Escala ${fd(dt)}`);
+    XLSX.utils.book_append_sheet(wb,ws,`Escala ${dt}`);
     XLSX.writeFile(wb,`Escala_${dt}.xlsx`);
+    toast('Excel gerado!');
   }
   const mots=eq.filter(e=>e.funcao==='MOTORISTA');const ajs=eq.filter(e=>e.funcao==='AJUDANTE');
   return h('div',null,
