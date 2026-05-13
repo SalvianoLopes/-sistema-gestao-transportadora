@@ -1143,6 +1143,7 @@ function Frota(){
 
 /* EQUIPE */
 
+function Escala(){const[d,s]=useState([]);return h('div',{className:'pg'},h('h1',null,'📅 Escala'),h('p',null,'Aba Escala - Em desenvolvimento'))}
 function Equipe(){
   const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);const[modal,setModal]=useState(false);const[saving,setSaving]=useState(false);const[busca,setBusca]=useState('');const[ff,setFf]=useState('');
   const[F,setF]=useState({nome:'',funcao:'MOTORISTA',matricula:'',data_admissao:'',status:'ATIVO',venc_exame_periodico:'',venc_exame_toxicologico:'',obs:''});
@@ -2659,8 +2660,8 @@ function Despesas(){
   )
 }
 
-const PAGES={dashboard:Dashboard,entrada:EntradaDia,liberacoes:Liberacoes,descarga:Descarga,frota:Frota,equipe:Equipe,recargas:Recargas,ranking:Ranking,despesas:Despesas};
-const NAV=[{k:'dashboard',l:'Dashboard'},{k:'entrada',l:'Entrada do Dia'},{k:'liberacoes',l:'Liberações Diárias'},{k:'descarga',l:'Descarga FEMSA'},{k:'frota',l:'Frota'},{k:'equipe',l:'Equipe'},{k:'recargas',l:'Recargas'},{k:'ranking',l:'🏆 Ranking'},{k:'despesas',l:'💰 Despesas'}];
+const PAGES={dashboard:Dashboard,entrada:EntradaDia,liberacoes:Liberacoes,descarga:Descarga,frota:Frota,equipe:Equipe,escala:Escala,recargas:Recargas,ranking:Ranking,despesas:Despesas};
+const NAV=[{k:'dashboard',l:'Dashboard'},{k:'entrada',l:'Entrada do Dia'},{k:'liberacoes',l:'Liberações Diárias'},{k:'descarga',l:'Descarga FEMSA'},{k:'frota',l:'Frota'},{k:'equipe',l:'Equipe'},{k:'escala',l:'📅 Escala'},{k:'recargas',l:'Recargas'},{k:'ranking',l:'🏆 Ranking'},{k:'despesas',l:'💰 Despesas'}];
 
 function App(){
   const[page,setPage]=useState('liberacoes');
