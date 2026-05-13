@@ -1143,7 +1143,89 @@ function Frota(){
 
 /* EQUIPE */
 
-function Escala(){ const [dados, setDados] = useState([]); useEffect(() => { fetch(`${SUPABASE_URL}/rest/v1/escala_rascunho`, { headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }) .then(r => r.json()) .then(d => setDados(d || [])) .catch(e => setDados([])); }, []); return h('div', {className: 'pg'}, h('h1', null, '📅 Escala'), h('p', null, `${dados.length} registros`), h('table', {style: {width: '100%', borderCollapse: 'collapse'}}, h('thead', null, h('tr', null, h('th', {style: {border: '1px solid #ccc', padding: '8px'}}, 'Data'), h('th', {style: {border: '1px solid #ccc', padding: '8px'}}, 'Placa'), h('th', {style: {border: '1px solid #ccc', padding: '8px'}}, 'Motorista') ) ), h('tbody', null, dados.map((r, idx) => h('tr', {key: idx}, h('td', {style: {border: '1px solid #ccc', padding: '8px'}}, r.data || '—'), h('td', {style: {border: '1px solid #ccc', padding: '8px'}}, r.placa || '—'), h('td', {style: {border: '1px solid #ccc', padding: '8px'}}, r.motorista || '—') ) ) ) ) ); }
+function Escala(){
+  const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);const[modal,setModal]=useState(false);const[saving,setSaving]=useState(false);const[editId,setEditId]=useState(null);const[fr,setFr]=useState([]);const[eq,setEq]=useState([]);const[dt,setDt]=useState(iso());
+  const emptyF={data:iso(),placa:'',tipo:'VAN',motorista:'',mat_mot:'',aj1:'',mat_aj1:'',aj2:'',mat_aj2:'',num_transp:'',rota:''};
+  const[F,setF]=useState(emptyF);
+  useEffect(()=>{load()},[dt]);
+  async function load(){setLd(true);try{const[d,f,e]=await Promise.all([db.get('escala_rascunho',{data:{op:'eq',val:dt}},{order:'placa.asc'}),db.get('frota',{},{select:'placa,tipo',order:'placa.asc'}),db.get('equipe',{status:{op:'eq',val:'ATIVO'}},{select:'nome,matricula,funcao',order:'funcao.asc,nome.asc'})]);setRows(d);setFr(f);setEq(e)}catch(e){}setLd(false)}
+  async function salvar(){if(!F.placa||!F.motorista){toast('Placa e motorista obrigatórios','err');return}setSaving(true);try{const p={data:F.data,placa:F.placa,tipo:F.tipo,motorista:F.motorista,mat_mot:F.mat_mot||null,aj1:F.aj1||null,mat_aj1:F.mat_aj1||null,aj2:F.aj2||null,mat_aj2:F.mat_aj2||null,num_transp:F.num_transp||null,rota:F.rota||null};if(editId){await db.patch('escala_rascunho',editId,p);toast('Atualizado!')}else{await db.post('escala_rascunho',p);toast('Salvo!')}setModal(false);setEditId(null);setF(emptyF);load()}catch(e){toast('Erro: '+e.message,'err')}setSaving(false)}
+  async function excluir(id){if(!confirm('Excluir este registro?'))return;try{const r=await fetch(`${SURL}/rest/v1/escala_rascunho?id=eq.${id}`,{method:'DELETE',headers:HDR});if(!r.ok)throw new Error(await r.text());toast('Excluído!');load()}catch(e){toast('Erro: '+e.message,'err')}}
+  function editar(row){setF({data:row.data||iso(),placa:row.placa||'',tipo:row.tipo||'VAN',motorista:row.motorista||'',mat_mot:row.mat_mot||'',aj1:row.aj1||'',mat_aj1:row.mat_aj1||'',aj2:row.aj2||'',mat_aj2:row.mat_aj2||'',num_transp:row.num_transp||'',rota:row.rota||''});setEditId(row.id);setModal(true)}
+  function abrirNovo(){setF({...emptyF,data:dt});setEditId(null);setModal(true)}
+  const mots=eq.filter(e=>e.funcao==='MOTORISTA');const ajs=eq.filter(e=>e.funcao==='AJUDANTE');
+  return h('div',null,
+    h('div',{className:'sh'},
+      h('div',null,h('h1',{className:'st'},'Escala ',h('span',null,'Rascunho')),h('div',{className:'ss'},`${rows.length} veículo${rows.length!==1?'s':''} escalado${rows.length!==1?'s':''} em ${fd(dt)}`)),
+      h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
+        h('input',{type:'date',value:dt,onChange:e=>setDt(e.target.value),style:{fontFamily:"'JetBrains Mono',monospace",background:'#fff',color:'#111',border:'1px solid var(--b2)',borderRadius:6,padding:'6px 10px'}}),
+        h('button',{className:'btn btn-r',onClick:abrirNovo},'+ Escalar Veículo')
+      )
+    ),
+    h('div',{className:'kg'},
+      h('div',{className:'kc b'},h('div',{className:'kl'},'Total'),h('div',{className:'kv'},rows.length)),
+      h('div',{className:'kc g'},h('div',{className:'kl'},'VAN'),h('div',{className:'kv'},rows.filter(r=>r.tipo==='VAN').length)),
+      h('div',{className:'kc r'},h('div',{className:'kl'},'VUC'),h('div',{className:'kv'},rows.filter(r=>r.tipo==='VUC').length)),
+      h('div',{className:'kc y'},h('div',{className:'kl'},'Com Ajudante'),h('div',{className:'kv'},rows.filter(r=>r.aj1).length))
+    ),
+    ld?h(Ldg):rows.length===0?h(Emp,{i:'📅',t:`Nenhuma escala em ${fd(dt)}`}):
+    h('div',{className:'card'},h('div',{className:'tw'},h('table',null,
+      h('thead',null,h('tr',null,
+        h('th',null,'Placa'),h('th',null,'Tipo'),h('th',null,'Motorista'),h('th',null,'Mat.'),h('th',null,'Ajudante 1'),h('th',null,'Ajudante 2'),h('th',null,'Nº Transp'),h('th',null,'Rota'),
+        h('th',{style:{textAlign:'center',position:'sticky',right:0,background:'var(--sur)',zIndex:2,borderLeft:'1px solid var(--b2)'}},'Ações')
+      )),
+      h('tbody',null,rows.map(r=>h('tr',{key:r.id},
+        h('td',{className:'b'},r.placa||'—'),
+        h('td',null,h(Bs,{s:r.tipo||'VAN'})),
+        h('td',null,r.motorista||'—'),
+        h('td',{className:'m',style:{fontFamily:"'JetBrains Mono',monospace",fontSize:10}},r.mat_mot||'—'),
+        h('td',{className:'m'},r.aj1||'—'),
+        h('td',{className:'m'},r.aj2||'—'),
+        h('td',{className:'m',style:{fontFamily:"'JetBrains Mono',monospace"}},r.num_transp||'—'),
+        h('td',{className:'b'},r.rota||'—'),
+        h('td',{style:{textAlign:'center',position:'sticky',right:0,background:'var(--sur)',borderLeft:'1px solid var(--b2)'}},
+          h('button',{className:'btn btn-o btn-xs',onClick:()=>editar(r),style:{marginRight:4}},'✏️'),
+          h('button',{className:'btn btn-xs',style:{background:'transparent',border:'1px solid var(--red)',color:'var(--red)',borderRadius:6,padding:'2px 7px',cursor:'pointer',fontSize:11},onClick:()=>excluir(r.id)},'✕')
+        )
+      )))
+    ))),
+    modal&&h('div',{className:'ov'},
+      h('div',{className:'mod'},
+        h('div',{className:'mh'},
+          h('div',null,h('div',{className:'mt'},editId?'✏️ Editar Escala':'📅 Nova Escala'),h('div',{style:{fontSize:11,color:'var(--t3)',marginTop:3}},editId?`Editando registro de ${fd(F.data)}`:'Escalar veículo e equipe')),
+          h('button',{className:'btn btn-o btn-xs',onClick:()=>{setModal(false);setEditId(null);}},'✕')
+        ),
+        h('div',{className:'mb'},
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Data'),h('input',{type:'date',value:F.data,onChange:e=>setF(f=>({...f,data:e.target.value}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Tipo'),h('select',{value:F.tipo,onChange:e=>{const t=e.target.value;setF(f=>({...f,tipo:t,placa:''}))}},h('option',{value:'VAN'},'VAN'),h('option',{value:'VUC'},'VUC')))
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Placa'),h('select',{value:F.placa,onChange:e=>setF(f=>({...f,placa:e.target.value}))},h('option',{value:''},'— Selecione —'),fr.filter(v=>!F.tipo||v.tipo===F.tipo).map(v=>h('option',{key:v.placa,value:v.placa},v.placa)))),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Nº Transporte'),h('input',{type:'text',value:F.num_transp,onChange:e=>setF(f=>({...f,num_transp:e.target.value})),placeholder:'Ex: 12345'}))
+          ),
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Rota'),h('input',{type:'text',value:F.rota,onChange:e=>setF(f=>({...f,rota:e.target.value})),placeholder:'Ex: BR0412'})),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Motorista'),h('select',{value:F.motorista,onChange:e=>{const m=mots.find(x=>x.nome===e.target.value);setF(f=>({...f,motorista:e.target.value,mat_mot:m?.matricula||''}))}},h('option',{value:''},'— Selecione —'),mots.map(m=>h('option',{key:m.nome,value:m.nome},m.nome)))),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Matrícula Mot.'),h('input',{type:'text',value:F.mat_mot,onChange:e=>setF(f=>({...f,mat_mot:e.target.value})),style:{fontFamily:"'JetBrains Mono',monospace"}}))
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Ajudante 1'),h('select',{value:F.aj1,onChange:e=>{const a=ajs.find(x=>x.nome===e.target.value);setF(f=>({...f,aj1:e.target.value,mat_aj1:a?.matricula||''}))}},h('option',{value:''},'— Opcional —'),ajs.map(a=>h('option',{key:a.nome,value:a.nome},a.nome)))),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Matrícula Aj.1'),h('input',{type:'text',value:F.mat_aj1,onChange:e=>setF(f=>({...f,mat_aj1:e.target.value})),style:{fontFamily:"'JetBrains Mono',monospace"}}))
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Ajudante 2'),h('select',{value:F.aj2,onChange:e=>{const a=ajs.find(x=>x.nome===e.target.value);setF(f=>({...f,aj2:e.target.value,mat_aj2:a?.matricula||''}))}},h('option',{value:''},'— Opcional —'),ajs.map(a=>h('option',{key:a.nome,value:a.nome},a.nome)))),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Matrícula Aj.2'),h('input',{type:'text',value:F.mat_aj2,onChange:e=>setF(f=>({...f,mat_aj2:e.target.value})),style:{fontFamily:"'JetBrains Mono',monospace"}}))
+          )
+        ),
+        h('div',{className:'mf'},
+          h('button',{className:'btn btn-o',onClick:()=>{setModal(false);setEditId(null);}},'Cancelar'),
+          h('button',{className:'btn btn-r',onClick:salvar,disabled:saving},saving?'Salvando...':'✓ Salvar')
+        )
+      )
+    )
+  )
+}
 function Equipe(){
   const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);const[modal,setModal]=useState(false);const[saving,setSaving]=useState(false);const[busca,setBusca]=useState('');const[ff,setFf]=useState('');
   const[F,setF]=useState({nome:'',funcao:'MOTORISTA',matricula:'',data_admissao:'',status:'ATIVO',venc_exame_periodico:'',venc_exame_toxicologico:'',obs:''});
