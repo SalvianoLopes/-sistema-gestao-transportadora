@@ -1153,12 +1153,26 @@ function Escala(){
   async function excluir(id){if(!confirm('Excluir este registro?'))return;try{const r=await fetch(`${SURL}/rest/v1/escala_rascunho?id=eq.${id}`,{method:'DELETE',headers:HDR});if(!r.ok)throw new Error(await r.text());toast('Excluído!');load()}catch(e){toast('Erro: '+e.message,'err')}}
   function editar(row){setF({data:row.data||iso(),placa:row.placa||'',tipo:row.tipo||'VAN',motorista:row.motorista||'',mat_mot:row.mat_mot||'',aj1:row.aj1||'',mat_aj1:row.mat_aj1||'',aj2:row.aj2||'',mat_aj2:row.mat_aj2||'',num_transp:row.num_transp||'',rota:row.rota||''});setEditId(row.id);setModal(true)}
   function abrirNovo(){setF({...emptyF,data:dt});setEditId(null);setModal(true)}
+  function expExcel(){
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.json_to_sheet(rows.map(r=>({
+      'Data':fd(r.data),'Placa':r.placa||'','Tipo':r.tipo||'',
+      'Motorista':r.motorista||'','Mat. Motorista':r.mat_mot||'',
+      'Ajudante 1':r.aj1||'','Mat. Ajudante 1':r.mat_aj1||'',
+      'Ajudante 2':r.aj2||'','Mat. Ajudante 2':r.mat_aj2||'',
+      'Nº Transporte':r.num_transp||'','Rota':r.rota||''
+    })));
+    ws['!cols']=[{wch:12},{wch:10},{wch:6},{wch:32},{wch:16},{wch:32},{wch:16},{wch:32},{wch:16},{wch:14},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws,`Escala ${fd(dt)}`);
+    XLSX.writeFile(wb,`Escala_${dt}.xlsx`);
+  }
   const mots=eq.filter(e=>e.funcao==='MOTORISTA');const ajs=eq.filter(e=>e.funcao==='AJUDANTE');
   return h('div',null,
     h('div',{className:'sh'},
       h('div',null,h('h1',{className:'st'},'Escala ',h('span',null,'Rascunho')),h('div',{className:'ss'},`${rows.length} veículo${rows.length!==1?'s':''} escalado${rows.length!==1?'s':''} em ${fd(dt)}`)),
       h('div',{style:{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}},
         h('input',{type:'date',value:dt,onChange:e=>setDt(e.target.value),style:{fontFamily:"'JetBrains Mono',monospace",background:'#fff',color:'#111',border:'1px solid var(--b2)',borderRadius:6,padding:'6px 10px'}}),
+        rows.length>0&&h('button',{className:'btn btn-o btn-sm',onClick:expExcel},'⬇ Excel'),
         h('button',{className:'btn btn-r',onClick:abrirNovo},'+ Escalar Veículo')
       )
     ),
@@ -1171,7 +1185,9 @@ function Escala(){
     ld?h(Ldg):rows.length===0?h(Emp,{i:'📅',t:`Nenhuma escala em ${fd(dt)}`}):
     h('div',{className:'card'},h('div',{className:'tw'},h('table',null,
       h('thead',null,h('tr',null,
-        h('th',null,'Placa'),h('th',null,'Tipo'),h('th',null,'Motorista'),h('th',null,'Mat.'),h('th',null,'Ajudante 1'),h('th',null,'Ajudante 2'),h('th',null,'Nº Transp'),h('th',null,'Rota'),
+        h('th',null,'Placa'),h('th',null,'Tipo'),h('th',null,'Motorista'),h('th',null,'Mat. Mot.'),
+        h('th',null,'Ajudante 1'),h('th',null,'Mat. Aj.1'),h('th',null,'Ajudante 2'),h('th',null,'Mat. Aj.2'),
+        h('th',null,'Nº Transp'),h('th',null,'Rota'),
         h('th',{style:{textAlign:'center',position:'sticky',right:0,background:'var(--sur)',zIndex:2,borderLeft:'1px solid var(--b2)'}},'Ações')
       )),
       h('tbody',null,rows.map(r=>h('tr',{key:r.id},
@@ -1180,7 +1196,9 @@ function Escala(){
         h('td',null,r.motorista||'—'),
         h('td',{className:'m',style:{fontFamily:"'JetBrains Mono',monospace",fontSize:10}},r.mat_mot||'—'),
         h('td',{className:'m'},r.aj1||'—'),
+        h('td',{className:'m',style:{fontFamily:"'JetBrains Mono',monospace",fontSize:10}},r.mat_aj1||'—'),
         h('td',{className:'m'},r.aj2||'—'),
+        h('td',{className:'m',style:{fontFamily:"'JetBrains Mono',monospace",fontSize:10}},r.mat_aj2||'—'),
         h('td',{className:'m',style:{fontFamily:"'JetBrains Mono',monospace"}},r.num_transp||'—'),
         h('td',{className:'b'},r.rota||'—'),
         h('td',{style:{textAlign:'center',position:'sticky',right:0,background:'var(--sur)',borderLeft:'1px solid var(--b2)'}},
