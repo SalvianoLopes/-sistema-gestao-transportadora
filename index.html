@@ -1113,31 +1113,54 @@ function EntradaDia(){
 
 /* FROTA */
 function Frota(){
-  const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);const[modal,setModal]=useState(false);const[mM,setMM]=useState(null);const[saving,setSaving]=useState(false);
+  const[rows,setRows]=useState([]);const[ld,setLd]=useState(true);const[modal,setModal]=useState(false);const[saving,setSaving]=useState(false);
   const[F,setF]=useState({placa:'',modelo:'',tipo:'VAN',status:'ATIVO',obs:''});
-  const[FM,setFM]=useState({data_entrada:iso(),previsao_retorno:'',km_entrada:'',oficina:'Oficina Central',problema:'',servicos_realizados:'',pendencias:''});
   useEffect(()=>{load()},[]);
   async function load(){setLd(true);try{const d=await db.get('frota',{},{order:'tipo.asc,placa.asc'});setRows(d)}catch(e){}setLd(false)}
   async function salvarV(){if(!F.placa){toast('Placa obrigatória','err');return}setSaving(true);try{if(F.id)await db.patch('frota',F.id,F);else await db.post('frota',F);toast('Salvo!');setModal(false);load()}catch(e){toast('Erro: '+e.message,'err')}setSaving(false)}
-  async function regM(){if(!FM.problema){toast('Descreva o problema','err');return}if(!FM.km_entrada){toast('KM de entrada é obrigatório','err');return}setSaving(true);try{const payload={frota_id:mM.id,placa:mM.placa,status:'MANUTENCAO',...FM,km_entrada:parseInt(FM.km_entrada)||null,previsao_retorno:FM.previsao_retorno||null};await db.patch('frota',mM.id,{status:'MANUTENCAO',obs:FM.problema});await db.post('manutencao',payload);toast('Manutenção registrada!');setMM(null);load()}catch(e){toast('Erro: '+e.message,'err')}setSaving(false)}
-  async function lib(v){try{await db.patch('frota',v.id,{status:'ATIVO'});toast(`${v.placa} liberado!`);load()}catch(e){toast('Erro','err')}}
   const at=rows.filter(f=>f.status==='ATIVO'),mn=rows.filter(f=>f.status!=='ATIVO');
   return h('div',null,
-    h('div',{className:'sh'},h('div',null,h('h1',{className:'st'},'Gestão de ',h('span',null,'Frota')),h('div',{className:'ss'},`${rows.length} veículos · ${at.length} ativos`)),h('button',{className:'btn btn-r',onClick:()=>{setF({placa:'',modelo:'',tipo:'VAN',status:'ATIVO',obs:''});setModal(true)}},'+ Cadastrar')),
-    h('div',{className:'kg'},h('div',{className:'kc g'},h('div',{className:'kl'},'Ativos'),h('div',{className:'kv'},at.length)),h('div',{className:'kc y'},h('div',{className:'kl'},'Manutenção'),h('div',{className:'kv'},mn.length)),h('div',{className:'kc b'},h('div',{className:'kl'},'VAN'),h('div',{className:'kv'},rows.filter(f=>f.tipo==='VAN').length)),h('div',{className:'kc r'},h('div',{className:'kl'},'VUC'),h('div',{className:'kv'},rows.filter(f=>f.tipo==='VUC').length))),
+    h('div',{className:'sh'},
+      h('div',null,h('h1',{className:'st'},'Cadastro de ',h('span',null,'Frota')),h('div',{className:'ss'},`${rows.length} veículos · ${at.length} ativos · manutenção gerenciada na aba 🔧`)),
+      h('button',{className:'btn btn-r',onClick:()=>{setF({placa:'',modelo:'',tipo:'VAN',status:'ATIVO',obs:''});setModal(true)}},'+ Cadastrar')
+    ),
+    h('div',{className:'kg'},
+      h('div',{className:'kc g'},h('div',{className:'kl'},'Ativos'),h('div',{className:'kv'},at.length)),
+      h('div',{className:'kc y'},h('div',{className:'kl'},'Em Manutenção'),h('div',{className:'kv'},mn.length)),
+      h('div',{className:'kc b'},h('div',{className:'kl'},'VAN'),h('div',{className:'kv'},rows.filter(f=>f.tipo==='VAN').length)),
+      h('div',{className:'kc r'},h('div',{className:'kl'},'VUC'),h('div',{className:'kv'},rows.filter(f=>f.tipo==='VUC').length))
+    ),
     ld?h(Ldg):h('div',{className:'card'},h('div',{className:'tw'},h('table',null,
-      h('thead',null,h('tr',null,h('th',null,'Placa'),h('th',null,'Modelo'),h('th',null,'Tipo'),h('th',null,'Status'),h('th',null,'Observações'),h('th',null,'Ações'))),
+      h('thead',null,h('tr',null,h('th',null,'Placa'),h('th',null,'Modelo'),h('th',null,'Tipo'),h('th',null,'Status'),h('th',null,'Observações'),h('th',null,''))),
       h('tbody',null,rows.map(v=>h('tr',{key:v.id},
-        h('td',{className:'b m'},v.placa),h('td',null,v.modelo||'—'),h('td',null,h(Bs,{s:v.tipo})),h('td',null,h(Bs,{s:v.status})),
-        h('td',{style:{maxWidth:260,whiteSpace:'normal',fontSize:11,color:'var(--t3)'}},v.obs||'—'),
-        h('td',null,h('div',{style:{display:'flex',gap:5}},
-          v.status==='ATIVO'?h('button',{className:'btn btn-o btn-xs',onClick:()=>{setMM(v);setFM({data_entrada:iso(),previsao_retorno:'',km_entrada:'',oficina:'Oficina Central',problema:'',servicos_realizados:'',pendencias:''})}},'🔧 Manut.'):h('button',{className:'btn btn-g btn-xs',onClick:()=>lib(v)},'✓ Liberar'),
-          h('button',{className:'btn btn-o btn-xs',onClick:()=>{setF({...v});setModal(true)}},'✏️')
-        ))
+        h('td',{className:'b m'},v.placa),
+        h('td',null,v.modelo||'—'),
+        h('td',null,h(Bs,{s:v.tipo})),
+        h('td',null,h(Bs,{s:v.status})),
+        h('td',{style:{maxWidth:280,whiteSpace:'normal',fontSize:11,color:'var(--t3)'}},v.obs||'—'),
+        h('td',null,h('button',{className:'btn btn-o btn-xs',onClick:()=>{setF({...v});setModal(true)}},'✏️'))
       )))
     ))),
-    modal&&h('div',{className:'ov'},h('div',{className:'mod'},h('div',{className:'mh'},h('div',{className:'mt'},F.id?'Editar':'Novo Veículo'),h('button',{className:'btn btn-o btn-xs',onClick:()=>setModal(false)},'✕')),h('div',{className:'mb'},h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Placa'),h('input',{type:'text',value:F.placa,onChange:e=>setF(f=>({...f,placa:e.target.value.toUpperCase()}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Modelo'),h('input',{type:'text',value:F.modelo||'',onChange:e=>setF(f=>({...f,modelo:e.target.value}))}))),h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Tipo'),h('select',{value:F.tipo,onChange:e=>setF(f=>({...f,tipo:e.target.value}))},h('option',{value:'VAN'},'VAN'),h('option',{value:'VUC'},'VUC'))),h('div',{className:'fg'},h('label',{className:'lbl'},'Status'),h('select',{value:F.status,onChange:e=>setF(f=>({...f,status:e.target.value}))},h('option',{value:'ATIVO'},'Ativo'),h('option',{value:'MANUTENCAO'},'Manutenção')))),h('div',{className:'fg'},h('label',{className:'lbl'},'Observações'),h('textarea',{value:F.obs||'',onChange:e=>setF(f=>({...f,obs:e.target.value}))}))),h('div',{className:'mf'},h('button',{className:'btn btn-o',onClick:()=>setModal(false)},'Cancelar'),h('button',{className:'btn btn-r',onClick:salvarV,disabled:saving},saving?'Salvando...':'✓ Salvar')))),
-    mM&&h('div',{className:'ov'},h('div',{className:'mod'},h('div',{className:'mh'},h('div',{className:'mt'},`🔧 ${mM.placa}`),h('button',{className:'btn btn-o btn-xs',onClick:()=>setMM(null)},'✕')),h('div',{className:'mb'},h('div',{className:'r2'},h('div',{className:'fg'},h('label',{className:'lbl'},'Entrada'),h('input',{type:'date',value:FM.data_entrada,onChange:e=>setFM(f=>({...f,data_entrada:e.target.value}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Previsão Retorno'),h('input',{type:'date',value:FM.previsao_retorno,onChange:e=>setFM(f=>({...f,previsao_retorno:e.target.value})),placeholder:'Deixe vazio se não souber'}))),h('div',{className:'fg'},h('label',{className:'lbl'},'KM de Entrada ★ Obrigatório'),h('input',{type:'number',placeholder:'Ex: 45000',value:FM.km_entrada,onChange:e=>setFM(f=>({...f,km_entrada:e.target.value})),style:{borderColor:!FM.km_entrada?'#e8195a':undefined}})),h('div',{className:'fg'},h('label',{className:'lbl'},'Problema ⚠'),h('textarea',{placeholder:'Descreva...',value:FM.problema,onChange:e=>setFM(f=>({...f,problema:e.target.value}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Serviços'),h('textarea',{value:FM.servicos_realizados,onChange:e=>setFM(f=>({...f,servicos_realizados:e.target.value}))})),h('div',{className:'fg'},h('label',{className:'lbl'},'Pendências'),h('textarea',{value:FM.pendencias,onChange:e=>setFM(f=>({...f,pendencias:e.target.value}))}))),h('div',{className:'mf'},h('button',{className:'btn btn-o',onClick:()=>setMM(null)},'Cancelar'),h('button',{className:'btn btn-r',onClick:regM,disabled:saving},saving?'Salvando...':'✓ Registrar'))))
+    modal&&h('div',{className:'ov'},
+      h('div',{className:'mod'},
+        h('div',{className:'mh'},h('div',{className:'mt'},F.id?'Editar Veículo':'Novo Veículo'),h('button',{className:'btn btn-o btn-xs',onClick:()=>setModal(false)},'✕')),
+        h('div',{className:'mb'},
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Placa'),h('input',{type:'text',value:F.placa,onChange:e=>setF(f=>({...f,placa:e.target.value.toUpperCase()}))})),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Modelo'),h('input',{type:'text',value:F.modelo||'',onChange:e=>setF(f=>({...f,modelo:e.target.value}))}))
+          ),
+          h('div',{className:'r2'},
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Tipo'),h('select',{value:F.tipo,onChange:e=>setF(f=>({...f,tipo:e.target.value}))},h('option',{value:'VAN'},'VAN'),h('option',{value:'VUC'},'VUC'))),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Status'),h('select',{value:F.status,onChange:e=>setF(f=>({...f,status:e.target.value}))},h('option',{value:'ATIVO'},'Ativo'),h('option',{value:'MANUTENCAO'},'Manutenção')))
+          ),
+          h('div',{className:'fg'},h('label',{className:'lbl'},'Observações'),h('textarea',{value:F.obs||'',onChange:e=>setF(f=>({...f,obs:e.target.value}))}))
+        ),
+        h('div',{className:'mf'},
+          h('button',{className:'btn btn-o',onClick:()=>setModal(false)},'Cancelar'),
+          h('button',{className:'btn btn-r',onClick:salvarV,disabled:saving},saving?'Salvando...':'✓ Salvar')
+        )
+      )
+    )
   )
 }
 
