@@ -2405,8 +2405,8 @@ function Ranking(){
 
       // Calcular métricas por colaborador
       const mapa={};
-      // Chave normalizada: sem espaços extras, maiúsculo — evita duplicatas por variação de grafia
-      const nk=n=>n?.trim().toUpperCase()||'';
+      // Chave normalizada: trim + maiúsculo + remove acentos + colapsa espaços internos
+      const nk=n=>n?.trim().normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/\s+/g,' ')||'';
 
       function addColaborador(nome,tipoFunc,tveiculo){
         if(!nome)return;
