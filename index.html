@@ -1357,13 +1357,13 @@ function Recargas(){
   async function loadPagamentos(){
     try{
       const url=new URL(`${SURL}/rest/v1/pagamentos_recarga`);
-      url.searchParams.set('select','nome,pago,valor');
+      url.searchParams.set('select','colaborador_nome,status,valor');
       url.searchParams.set('periodo_ini','eq.'+ini);
       url.searchParams.set('periodo_fim','eq.'+fim);
       const r=await fetch(url.toString(),{headers:HDR});
       const recs=await r.json();
       const m={};
-      if(Array.isArray(recs))recs.forEach(rec=>{if(rec.pago)m[rec.nome]=true;});
+      if(Array.isArray(recs))recs.forEach(rec=>{if(rec.status==='PAGO')m[rec.colaborador_nome]=true;});
       setPagamentosState(m);
     }catch(e){}
   }
@@ -1371,14 +1371,12 @@ function Recargas(){
   async function setPagamento(nome, pago, valor){
     setPagamentosState(prev=>({...prev,[nome]:pago}));
     try{
-      // tenta PATCH (update) primeiro — se não existir (0 rows) faz POST (insert)
-      const filtro=`?nome=eq.${encodeURIComponent(nome)}&periodo_ini=eq.${ini}&periodo_fim=eq.${fim}`;
+      const filtro=`?colaborador_nome=eq.${encodeURIComponent(nome)}&periodo_ini=eq.${ini}&periodo_fim=eq.${fim}`;
       const body=JSON.stringify({
-        nome,periodo_ini:ini,periodo_fim:fim,
-        pago,
+        colaborador_nome:nome,periodo_ini:ini,periodo_fim:fim,
+        status:pago?'PAGO':'PENDENTE',
         valor:pago?(valor||null):null,
-        data_pagamento:pago?new Date().toISOString():null,
-        updated_at:new Date().toISOString()
+        data_pagamento:pago?new Date().toISOString():null
       });
       const patch=await fetch(`${SURL}/rest/v1/pagamentos_recarga${filtro}`,{
         method:'PATCH',
@@ -1388,7 +1386,6 @@ function Recargas(){
       if(!patch.ok)throw new Error(await patch.text());
       const updated=await patch.json();
       if(!updated||updated.length===0){
-        // não existia — inserir
         const ins=await fetch(`${SURL}/rest/v1/pagamentos_recarga`,{
           method:'POST',
           headers:{...HDR,'Prefer':'return=minimal'},
