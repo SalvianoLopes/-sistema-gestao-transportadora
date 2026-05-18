@@ -1371,18 +1371,31 @@ function Recargas(){
   async function setPagamento(nome, pago, valor){
     setPagamentosState(prev=>({...prev,[nome]:pago}));
     try{
-      const r=await fetch(`${SURL}/rest/v1/pagamentos_recarga`,{
-        method:'POST',
-        headers:{...HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
-        body:JSON.stringify({
-          nome,periodo_ini:ini,periodo_fim:fim,
-          pago,
-          valor:pago?(valor||null):null,
-          data_pagamento:pago?new Date().toISOString():null,
-          updated_at:new Date().toISOString()
-        })
+      // tenta PATCH (update) primeiro — se não existir (0 rows) faz POST (insert)
+      const filtro=`?nome=eq.${encodeURIComponent(nome)}&periodo_ini=eq.${ini}&periodo_fim=eq.${fim}`;
+      const body=JSON.stringify({
+        nome,periodo_ini:ini,periodo_fim:fim,
+        pago,
+        valor:pago?(valor||null):null,
+        data_pagamento:pago?new Date().toISOString():null,
+        updated_at:new Date().toISOString()
       });
-      if(!r.ok)throw new Error(await r.text());
+      const patch=await fetch(`${SURL}/rest/v1/pagamentos_recarga${filtro}`,{
+        method:'PATCH',
+        headers:{...HDR,'Prefer':'return=representation'},
+        body
+      });
+      if(!patch.ok)throw new Error(await patch.text());
+      const updated=await patch.json();
+      if(!updated||updated.length===0){
+        // não existia — inserir
+        const ins=await fetch(`${SURL}/rest/v1/pagamentos_recarga`,{
+          method:'POST',
+          headers:{...HDR,'Prefer':'return=minimal'},
+          body
+        });
+        if(!ins.ok)throw new Error(await ins.text());
+      }
       if(pago) toast('✅ '+nome.split(' ')[0]+' marcado como PAGO — salvo!');
       else toast('↩ '+nome.split(' ')[0]+' revertido para PENDENTE');
     }catch(e){
