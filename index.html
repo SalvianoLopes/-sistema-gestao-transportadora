@@ -1191,6 +1191,8 @@ function Escala(){
     toast('Excel gerado!');
   }
   const mots=eq.filter(e=>e.funcao==='MOTORISTA');const ajs=eq.filter(e=>e.funcao==='AJUDANTE');
+  // motoristas também podem sair como ajudante — listar ambos (ajudantes primeiro)
+  const ajOpcoes=[...ajs,...mots];
   return h('div',null,
     h('div',{className:'sh'},
       h('div',null,h('h1',{className:'st'},'Escala ',h('span',null,'Rascunho')),h('div',{className:'ss'},`${rows.length} veículo${rows.length!==1?'s':''} escalado${rows.length!==1?'s':''} em ${fd(dt)}`)),
@@ -1252,11 +1254,11 @@ function Escala(){
             h('div',{className:'fg'},h('label',{className:'lbl'},'Matrícula Mot.'),h('input',{type:'text',value:F.mat_mot,onChange:e=>setF(f=>({...f,mat_mot:e.target.value})),style:{fontFamily:"'JetBrains Mono',monospace"}}))
           ),
           h('div',{className:'r2'},
-            h('div',{className:'fg'},h('label',{className:'lbl'},'Ajudante 1'),h('select',{value:F.aj1,onChange:e=>{const a=ajs.find(x=>x.nome===e.target.value);setF(f=>({...f,aj1:e.target.value,mat_aj1:a?.matricula||''}))}},h('option',{value:''},'— Opcional —'),ajs.map(a=>h('option',{key:a.nome,value:a.nome},a.nome)))),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Ajudante 1'),h('select',{value:F.aj1,onChange:e=>{const a=eq.find(x=>x.nome===e.target.value);setF(f=>({...f,aj1:e.target.value,mat_aj1:a?.matricula||''}))}},h('option',{value:''},'— Opcional —'),h('optgroup',{label:'Ajudantes'},ajs.map(a=>h('option',{key:a.nome,value:a.nome},a.nome))),h('optgroup',{label:'Motoristas'},mots.map(a=>h('option',{key:a.nome,value:a.nome},a.nome))))),
             h('div',{className:'fg'},h('label',{className:'lbl'},'Matrícula Aj.1'),h('input',{type:'text',value:F.mat_aj1,onChange:e=>setF(f=>({...f,mat_aj1:e.target.value})),style:{fontFamily:"'JetBrains Mono',monospace"}}))
           ),
           h('div',{className:'r2'},
-            h('div',{className:'fg'},h('label',{className:'lbl'},'Ajudante 2'),h('select',{value:F.aj2,onChange:e=>{const a=ajs.find(x=>x.nome===e.target.value);setF(f=>({...f,aj2:e.target.value,mat_aj2:a?.matricula||''}))}},h('option',{value:''},'— Opcional —'),ajs.map(a=>h('option',{key:a.nome,value:a.nome},a.nome)))),
+            h('div',{className:'fg'},h('label',{className:'lbl'},'Ajudante 2'),h('select',{value:F.aj2,onChange:e=>{const a=eq.find(x=>x.nome===e.target.value);setF(f=>({...f,aj2:e.target.value,mat_aj2:a?.matricula||''}))}},h('option',{value:''},'— Opcional —'),h('optgroup',{label:'Ajudantes'},ajs.map(a=>h('option',{key:a.nome,value:a.nome},a.nome))),h('optgroup',{label:'Motoristas'},mots.map(a=>h('option',{key:a.nome,value:a.nome},a.nome))))),
             h('div',{className:'fg'},h('label',{className:'lbl'},'Matrícula Aj.2'),h('input',{type:'text',value:F.mat_aj2,onChange:e=>setF(f=>({...f,mat_aj2:e.target.value})),style:{fontFamily:"'JetBrains Mono',monospace"}}))
           )
         ),
@@ -1396,10 +1398,13 @@ function Recargas(){
     rows.forEach(r=>{
       [[r.motorista_nome,r.valor_motorista,'MOTORISTA'],[r.ajudante1_nome,r.valor_ajudante1,'AJUDANTE'],[r.ajudante2_nome,r.valor_ajudante2,'AJUDANTE']]
       .forEach(([nome,val,func])=>{
-        if(!nome||!val)return;
+        if(!nome)return;
+        // registros antigos (antes 12/05) têm valor_motorista=NULL — usar padrão pelo tipo do veículo
+        const def=func==='MOTORISTA'?(r.tipo_veiculo==='VAN'?50:70):(r.tipo_veiculo==='VAN'?50:60);
+        const valorFinal=Number(val)>0?Number(val):def;
         const k=`${nome}|${r.data}`;
         if(!map[k])map[k]={nome,data:r.data,funcao:func,saida1:null,recargas:[]};
-        map[k].recargas.push({...r,valor:Number(val)||0});
+        map[k].recargas.push({...r,valor:valorFinal});
       });
     });
     return Object.values(map).sort((a,b)=>a.data.localeCompare(b.data)||a.nome.localeCompare(b.nome));
@@ -1409,8 +1414,13 @@ function Recargas(){
   const resumoPag=useMemo(()=>{
     const m={};
     rows.forEach(r=>{
-      [[r.motorista_nome,r.valor_motorista],[r.ajudante1_nome,r.valor_ajudante1],[r.ajudante2_nome,r.valor_ajudante2]]
-      .forEach(([n,v])=>{if(!n||!v)return;if(!m[n])m[n]={n,rc:0,t:0};m[n].rc++;m[n].t+=Number(v)||0});
+      [[r.motorista_nome,r.valor_motorista,'MOTORISTA'],[r.ajudante1_nome,r.valor_ajudante1,'AJUDANTE'],[r.ajudante2_nome,r.valor_ajudante2,'AJUDANTE']]
+      .forEach(([n,v,func])=>{
+        if(!n)return;
+        const def=func==='MOTORISTA'?(r.tipo_veiculo==='VAN'?50:70):(r.tipo_veiculo==='VAN'?50:60);
+        const vFinal=Number(v)>0?Number(v):def;
+        if(!m[n])m[n]={n,rc:0,t:0};m[n].rc++;m[n].t+=vFinal;
+      });
     });
     return Object.values(m).sort((a,b)=>b.t-a.t);
   },[rows]);
