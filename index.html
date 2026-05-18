@@ -1350,15 +1350,46 @@ function Recargas(){
   // Relatório do Dia
   const[dtDia,setDtDia]=useState(isoToday());
 
-  function setPagamento(nome, pago){
-    setPagamentosState(prev=>({...prev,[nome]:pago}));
-    if(pago) toast('✅ '+nome.split(' ')[0]+' marcado como PAGO!');
-    else toast('↩ '+nome.split(' ')[0]+' revertido para PENDENTE');
-  }
-
   function isoToday(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
-  useEffect(()=>{load()},[ini,fim]);
+  useEffect(()=>{load();loadPagamentos()},[ini,fim]);
+
+  async function loadPagamentos(){
+    try{
+      const url=new URL(`${SURL}/rest/v1/pagamentos_recarga`);
+      url.searchParams.set('select','nome,pago,valor');
+      url.searchParams.set('periodo_ini','eq.'+ini);
+      url.searchParams.set('periodo_fim','eq.'+fim);
+      const r=await fetch(url.toString(),{headers:HDR});
+      const recs=await r.json();
+      const m={};
+      if(Array.isArray(recs))recs.forEach(rec=>{if(rec.pago)m[rec.nome]=true;});
+      setPagamentosState(m);
+    }catch(e){}
+  }
+
+  async function setPagamento(nome, pago, valor){
+    setPagamentosState(prev=>({...prev,[nome]:pago}));
+    try{
+      const r=await fetch(`${SURL}/rest/v1/pagamentos_recarga`,{
+        method:'POST',
+        headers:{...HDR,'Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify({
+          nome,periodo_ini:ini,periodo_fim:fim,
+          pago,
+          valor:pago?(valor||null):null,
+          data_pagamento:pago?new Date().toISOString():null,
+          updated_at:new Date().toISOString()
+        })
+      });
+      if(!r.ok)throw new Error(await r.text());
+      if(pago) toast('✅ '+nome.split(' ')[0]+' marcado como PAGO — salvo!');
+      else toast('↩ '+nome.split(' ')[0]+' revertido para PENDENTE');
+    }catch(e){
+      toast('Erro ao salvar pagamento: '+e.message,'err');
+      setPagamentosState(prev=>({...prev,[nome]:!pago}));
+    }
+  }
 
   async function load(){
     setLd(true);
@@ -1745,11 +1776,11 @@ function Recargas(){
               pago
                 ? h('div',{style:{display:'flex',alignItems:'center',gap:6}},
                     h('span',{className:'badge bg'},'✅ PAGO'),
-                    h('button',{className:'btn btn-o btn-xs',onClick:()=>setPagamento(r.n,false),style:{fontSize:10}},'↩')
+                    h('button',{className:'btn btn-o btn-xs',onClick:()=>setPagamento(r.n,false,r.t),style:{fontSize:10}},'↩')
                   )
                 : h('button',{
                     className:'btn btn-r btn-xs',
-                    onClick:()=>setPagamento(r.n,true)
+                    onClick:()=>setPagamento(r.n,true,r.t)
                   },'💰 PAGAR')
             )
           )
